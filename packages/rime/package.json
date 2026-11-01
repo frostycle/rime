@@ -1,0 +1,69 @@
+{
+	"name": "@frostycle/rime",
+	"version": "0.0.1",
+	"scripts": {
+		"dev": "svelte-package --watch",
+		"build": "svelte-package && publint",
+		"prepack": "pnpm run build",
+		"check": "svelte-check --tsconfig ./tsconfig.json",
+		"check:watch": "svelte-check --tsconfig ./tsconfig.json --watch",
+		"test:unit": "TZ=UTC vitest run --project unit && TZ=America/New_York vitest run --project unit && TZ=Asia/Jakarta vitest run --project unit && TZ=Pacific/Apia vitest run --project unit",
+		"test:browser": "vitest run --project browser --project firefox"
+	},
+	"files": [
+		"dist",
+		"!dist/**/*.test.*",
+		"!dist/**/*.spec.*",
+		"!dist/**/fixtures/**",
+		"!dist/**/*Fixture*"
+	],
+	"sideEffects": [
+		"**/*.css"
+	],
+	"type": "module",
+	"exports": {
+		"./date-picker": {
+			"types": "./dist/date-picker/index.d.ts",
+			"svelte": "./dist/date-picker/index.js"
+		},
+		"./dropdown-menu": {
+			"types": "./dist/dropdown-menu/index.d.ts",
+			"svelte": "./dist/dropdown-menu/index.js"
+		}
+	},
+	"peerDependencies": {
+		"svelte": "^5.29.0"
+	},
+	"devDependencies": {
+		"@sveltejs/package": "^2.5.8",
+		"@sveltejs/vite-plugin-svelte": "^7.2.0",
+		"@types/node": "^26.6.6",
+		"@vitest/browser-playwright": "^5.0.5",
+		"@vitest/browser-webdriverio": "5.0.0",
+		"axe-core": "^4.14.0",
+		"playwright": "^1.64.1",
+		"publint": "^0.3.21",
+		"svelte": "^5.57.1",
+		"svelte-check": "^4.6.0",
+		"typescript": "^6.0.3",
+		"vite": "^8.3.0",
+		"vitest": "^5.0.5",
+		"vitest-browser-svelte": "^3.1.0",
+		"webdriverio": "^9.32.0"
+	},
+	"keywords": [
+		"svelte",
+		"headless",
+		"date-picker",
+		"date-range-picker",
+		"dropdown-menu"
+	],
+	"dependencies": {
+		"@floating-ui/dom": "^1.8.0"
+	},
+	"license": "MIT",
+	"publishConfig": {
+		"access": "public"
+	},
+	"description": "Headless, snippet-based UI primitives for Svelte 5."
+}

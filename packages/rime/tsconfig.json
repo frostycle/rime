@@ -1,0 +1,17 @@
+{
+	"compilerOptions": {
+		"strict": true,
+		"target": "ES2022",
+		"lib": ["ES2023", "DOM", "DOM.Iterable"],
+		"module": "ESNext",
+		"moduleResolution": "Bundler",
+		"verbatimModuleSyntax": true,
+		"isolatedModules": true,
+		"resolveJsonModule": true,
+		"allowImportingTsExtensions": true,
+		"noEmit": true,
+		"skipLibCheck": true,
+		"types": ["node"]
+	},
+	"include": ["src", "tests", "vite.config.ts", "svelte.config.js"]
+}

@@ -1,0 +1,13 @@
+{
+	"name": "rime-workspace",
+	"private": true,
+	"type": "module",
+	"packageManager": "pnpm@12.10.1",
+	"scripts": {
+		"dev": "pnpm --filter @frostycle/rime build && pnpm --parallel --filter @frostycle/rime --filter docs dev",
+		"build": "pnpm --filter @frostycle/rime build && pnpm --filter docs build",
+		"check": "pnpm --filter @frostycle/rime build && pnpm -r check",
+		"test:unit": "pnpm --filter @frostycle/rime test:unit",
+		"test:browser": "pnpm --filter @frostycle/rime test:browser"
+	}
+}
