@@ -70,5 +70,12 @@
 	"publishConfig": {
 		"access": "public"
 	},
-	"description": "Headless, snippet-based UI primitives for Svelte 5."
+	"description": "Headless, snippet-based UI primitives for Svelte 5.",
+	"homepage": "https://rime.frostycle.com",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/frostycle/rime.git",
+		"directory": "packages/rime"
+	},
+	"bugs": "https://github.com/frostycle/rime/issues"
 }
