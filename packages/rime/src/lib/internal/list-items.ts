@@ -3,6 +3,10 @@ type ListSeparator = { type: 'separator' };
 type ListGroup<T extends ListItem> = { type: 'group'; label: string; items: T[] };
 export type ListEntry<T extends ListItem> = T | ListSeparator | ListGroup<T>;
 
+export function isTypeaheadKey(event: KeyboardEvent): boolean {
+	return event.key.length === 1 && !event.ctrlKey && !event.metaKey && !event.altKey;
+}
+
 export function isSeparator<T extends ListItem>(entry: ListEntry<T>): entry is ListSeparator {
 	return 'type' in entry && entry.type === 'separator';
 }

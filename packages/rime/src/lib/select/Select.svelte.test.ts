@@ -3,7 +3,11 @@ import { expect, test, vi } from 'vitest';
 import { page, userEvent } from 'vitest/browser';
 import { render } from 'vitest-browser-svelte';
 import AllSnippetsFixture from './fixtures/AllSnippetsFixture.svelte';
+import CustomTriggerFixture from './fixtures/CustomTriggerFixture.svelte';
+import FormSelectFixture from './fixtures/FormSelectFixture.svelte';
 import LabelledSelectFixture from './fixtures/LabelledSelectFixture.svelte';
+import ModalSelectFixture from './fixtures/ModalSelectFixture.svelte';
+import SelectMenuPickerFixture from './fixtures/SelectMenuPickerFixture.svelte';
 import type { SelectEntry } from './types.js';
 
 const field = () => page.getByRole('combobox', { name: 'Country' });
@@ -167,7 +171,10 @@ test('all snippets render with their props', async () => {
 	await render(AllSnippetsFixture);
 	await field().click();
 	await expect.element(option('India')).toHaveAttribute('data-custom');
-	await expect.element(page.getByTestId('custom-separator')).toBeInTheDocument();
+	await expect.element(page.getByTestId('custom-trigger')).toBeInTheDocument();
+	await expect.element(page.getByTestId('custom-popup')).toBeInTheDocument();
+	await expect.element(page.getByTestId('custom-group-label')).toHaveTextContent('Later');
+	await expect.element(page.getByTestId('custom-separator')).toHaveAttribute('role', 'none');
 });
 
 const axeOptions = { rules: { region: { enabled: false } } };
@@ -177,4 +184,87 @@ test('axe finds no violations, closed or open', async () => {
 	expect((await axe.run(document.body, axeOptions)).violations).toEqual([]);
 	await field().click();
 	expect((await axe.run(document.body, axeOptions)).violations).toEqual([]);
+});
+
+const hiddenInput = () => document.querySelector<HTMLInputElement>('input[name="country"]')!;
+
+test('name writes a hidden input, and form reset restores the mounted value', async () => {
+	await render(FormSelectFixture, { value: 'id' });
+	expect(hiddenInput().value).toBe('id');
+	await field().click();
+	await option('Japan').click();
+	expect(hiddenInput().value).toBe('jp');
+	await page.getByRole('button', { name: 'Reset' }).click();
+	await expect.element(field()).toHaveTextContent('Indonesia');
+	expect(hiddenInput().value).toBe('id');
+});
+
+test('a value with no matching option shows the placeholder and is kept', async () => {
+	await render(FormSelectFixture, { value: 'zz', placeholder: 'Choose' });
+	await expect.element(field()).toHaveTextContent('Choose');
+	expect(hiddenInput().value).toBe('zz');
+	await field().click();
+	await expect.element(page.getByRole('option', { selected: true })).not.toBeInTheDocument();
+});
+
+test('the trigger follows a value changed from outside', async () => {
+	const { rerender } = await renderField({ value: 'id' });
+	await rerender({ value: 'jp' });
+	await expect.element(field()).toHaveTextContent('Japan');
+});
+
+test('a highlighted option that disappears moves the highlight to the first enabled', async () => {
+	const { rerender } = await renderField();
+	await field().click();
+	await userEvent.keyboard('{End}');
+	await rerender({ items: countries().slice(0, 4) });
+	await expect.element(option('Indonesia')).toHaveAttribute('data-highlighted');
+});
+
+test('disabling the select closes an open list', async () => {
+	const { rerender } = await renderField();
+	await field().click();
+	await rerender({ disabled: true });
+	await expect.element(page.getByRole('listbox')).not.toBeInTheDocument();
+	await expect.element(field()).toBeDisabled();
+});
+
+test('with no enabled options it opens with nothing highlighted', async () => {
+	await renderField({ items: [{ value: 'x', label: 'X', disabled: true }] });
+	await field().click();
+	await expect.element(field()).not.toHaveAttribute('aria-activedescendant');
+	await userEvent.keyboard('{Escape}');
+	await expect.element(page.getByRole('listbox')).not.toBeInTheDocument();
+});
+
+test('inside a modal dialog, Escape closes only the list', async () => {
+	await render(ModalSelectFixture);
+	await field().click();
+	await userEvent.keyboard('{Escape}');
+	await expect.element(page.getByRole('dialog')).toBeVisible();
+	await expect.element(page.getByRole('listbox')).not.toBeInTheDocument();
+});
+
+test('a select, a menu and a date picker on one page close each other and keep unique ids', async () => {
+	await render(SelectMenuPickerFixture);
+	await field().click();
+	await page.getByRole('button', { name: 'Menu' }).click();
+	await expect.element(page.getByRole('listbox')).not.toBeInTheDocument();
+	const ids = [...document.querySelectorAll('[id]')].map(({ id }) => id);
+	expect(new Set(ids).size).toBe(ids.length);
+});
+
+test('with transition, a click during the leave cannot select again', async () => {
+	const onchange = vi.fn();
+	await renderField({ transition: true, onchange });
+	await field().click();
+	await option('India').click();
+	(option('Japan').query() as HTMLElement | null)?.click();
+	expect(onchange).toHaveBeenCalledExactlyOnceWith('in');
+});
+
+test('a custom trigger on a non-labelable element opens without errors', async () => {
+	await render(CustomTriggerFixture);
+	await page.getByTestId('div-trigger').click();
+	await expect.element(page.getByRole('listbox')).toBeVisible();
 });

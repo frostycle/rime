@@ -2,7 +2,14 @@
 	import { onDestroy, untrack } from 'svelte';
 	import { createAttachmentKey } from 'svelte/attachments';
 	import { Popover } from '../internal/popover.svelte.js';
-	import { entryOffsets, flattenItems, isGroup, isSeparator } from '../internal/list-items.js';
+	import { watchFormReset } from '../internal/form-reset.js';
+	import {
+		entryOffsets,
+		flattenItems,
+		isGroup,
+		isSeparator,
+		isTypeaheadKey
+	} from '../internal/list-items.js';
 	import { Listbox } from './listbox.svelte.js';
 	import type { SelectElementProps, SelectOption, SelectProps } from './types.js';
 
@@ -14,6 +21,7 @@
 		value = $bindable(null),
 		onchange,
 		id: triggerIdProp,
+		name,
 		placeholder,
 		placement = 'bottom-start',
 		disabled = false,
@@ -96,7 +104,7 @@
 				openWith(() => listbox.highlightLast());
 				return;
 		}
-		if (event.key.length === 1 && !event.ctrlKey && !event.metaKey && !event.altKey) {
+		if (isTypeaheadKey(event)) {
 			event.preventDefault();
 			openWith(() => {
 				listbox.highlightOnOpen(value);
@@ -139,9 +147,9 @@
 	}
 
 	// A label click would otherwise reach the button and open the list, unlike a native <select>.
-	function attachLabels(element: HTMLButtonElement) {
+	function attachLabels(element: HTMLElement) {
 		const controller = new AbortController();
-		for (const label of element.labels) {
+		for (const label of labelsOf(element)) {
 			label.addEventListener(
 				'click',
 				(event) => {
@@ -154,10 +162,12 @@
 		return () => controller.abort();
 	}
 
+	function labelsOf(element: HTMLElement | null | undefined): HTMLLabelElement[] {
+		return [...((element as HTMLButtonElement | null | undefined)?.labels ?? [])];
+	}
+
 	function labelText(): string | undefined {
-		const element = popover.triggerElement;
-		const labels = element instanceof HTMLButtonElement ? [...element.labels] : [];
-		const text = labels.map((label) => label.textContent?.trim()).join(' ');
+		const text = labelsOf(popover.triggerElement).map((label) => label.textContent?.trim()).join(' ');
 		return text || undefined;
 	}
 
@@ -184,6 +194,16 @@
 		const index = listbox.highlighted;
 		if (!popover.mounted || index === -1) return;
 		document.getElementById(optionId(index))?.scrollIntoView({ block: 'nearest' });
+	});
+
+	const valueAtMount = untrack(() => value);
+
+	$effect(() => {
+		const element = popover.triggerElement;
+		if (!element) return;
+		return watchFormReset(element, () => {
+			value = valueAtMount;
+		});
 	});
 
 	$effect(() => {
@@ -260,6 +280,10 @@
 	{@render trigger({ props: triggerProps, open: popover.open, selected })}
 {:else}
 	<button {...triggerProps} class={classes.trigger}>{selected?.label ?? placeholder ?? ''}</button>
+{/if}
+
+{#if name}
+	<input type="hidden" {name} value={value ?? ''} />
 {/if}
 
 {#if popover.mounted}

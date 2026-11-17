@@ -1,13 +1,15 @@
-import { firstEnabled, lastEnabled, matchTypeahead, moveEnabled } from '../internal/list-items.js';
+import {
+	firstEnabled,
+	isTypeaheadKey,
+	lastEnabled,
+	matchTypeahead,
+	moveEnabled
+} from '../internal/list-items.js';
 import { createPointerMoveFilter } from '../internal/pointer.js';
 import type { SelectOption } from './types.js';
 
 const TYPEAHEAD_RESET_MS = 500;
 const PAGE_SIZE = 10;
-
-function isPrintable(event: KeyboardEvent): boolean {
-	return event.key.length === 1 && !event.ctrlKey && !event.metaKey && !event.altKey;
-}
 
 export class Listbox<T extends SelectOption> {
 	#items: () => T[];
@@ -58,7 +60,7 @@ export class Listbox<T extends SelectOption> {
 				return true;
 		}
 		if (event.key === ' ' && this.#typed === '') return false;
-		if (!isPrintable(event)) return false;
+		if (!isTypeaheadKey(event)) return false;
 		event.preventDefault();
 		this.#typeahead(event.key, this.highlighted);
 		return true;

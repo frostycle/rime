@@ -1,4 +1,10 @@
-import { firstEnabled, lastEnabled, matchTypeahead, stepEnabled } from '../internal/list-items.js';
+import {
+	firstEnabled,
+	isTypeaheadKey,
+	lastEnabled,
+	matchTypeahead,
+	stepEnabled
+} from '../internal/list-items.js';
 import type { MenuItem } from './types.js';
 import { interactionProps } from '../internal/interaction.js';
 import { createPointerMoveFilter } from '../internal/pointer.js';
@@ -141,7 +147,7 @@ export class Menu<T extends MenuItem> {
 			this.#activateWithSpace(event);
 			return;
 		}
-		if (event.key.length === 1 && !event.ctrlKey && !event.metaKey && !event.altKey) {
+		if (isTypeaheadKey(event)) {
 			event.preventDefault();
 			this.#typeahead(event.key, current);
 		}

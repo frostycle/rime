@@ -1,6 +1,7 @@
 <script lang="ts" generics="V">
 	import { untrack, type Snippet } from 'svelte';
 	import { createAttachmentKey } from 'svelte/attachments';
+	import { watchFormReset } from '../internal/form-reset.js';
 	import { interactionProps } from '../internal/interaction.js';
 	import { Popover } from '../internal/popover.svelte.js';
 	import { Calendar, type CalendarLabels } from './calendar.svelte.js';
@@ -111,13 +112,11 @@
 	const valueAtMount = untrack(() => value);
 
 	$effect(() => {
-		const form = popover.triggerElement?.closest('form');
-		if (!form) return;
-		const restore = () => {
+		const element = popover.triggerElement;
+		if (!element) return;
+		return watchFormReset(element, () => {
 			value = valueAtMount;
-		};
-		form.addEventListener('reset', restore);
-		return () => form.removeEventListener('reset', restore);
+		});
 	});
 
 	$effect(() => {
