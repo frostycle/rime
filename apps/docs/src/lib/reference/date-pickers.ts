@@ -84,7 +84,19 @@ export const datePickers: ComponentReference<DatePickerProps & DateRangePickerPr
 		},
 		presetList: { args: 'presets, select', notes: 'Each preset carries disabled.' }
 	},
-	keyboard: [],
+	keyboard: [
+		{
+			keys: 'Left, Right',
+			action: 'Previous or next day. Reversed in right-to-left layouts'
+		},
+		{ keys: 'Up, Down', action: 'Same weekday in the previous or next week' },
+		{ keys: 'Home, End', action: 'First or last day of the week' },
+		{ keys: 'PageUp, PageDown', action: 'Same date in the previous or next month' },
+		{ keys: 'Shift + PageUp, PageDown', action: 'Same date in the previous or next year' },
+		{ keys: 'Enter, Space', action: 'Pick the focused day' },
+		{ keys: 'Escape', action: 'Close and return focus to the trigger' },
+		{ keys: 'Tab', action: 'Move through the popup. Moving focus out of it closes it' }
+	],
 	attributes: [
 		{ element: 'Trigger', attributes: triggerAttributes },
 		{

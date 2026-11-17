@@ -1,12 +1,13 @@
 <script lang="ts">
 	import type { AttributeDoc } from '#lib/reference/types.js';
 
-	let { attributes }: { attributes: AttributeDoc[] } = $props();
+	let { attributes, label }: { attributes: AttributeDoc[]; label: string } = $props();
 	const heading = 'border-b border-line px-4 py-3 text-xs font-semibold text-fg-muted';
 </script>
 
 <div class="overflow-x-auto rounded-2xl border border-line bg-surface">
 	<table class="w-full min-w-[480px] border-collapse text-left text-sm">
+		<caption class="sr-only">{label}</caption>
 		<thead>
 			<tr>
 				<th scope="col" class={heading}>Element</th>

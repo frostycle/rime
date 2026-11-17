@@ -1,7 +1,7 @@
 <script lang="ts">
 	import type { PropDoc, ReferenceOf, SnippetDoc } from '#lib/reference/types.js';
 
-	let { reference }: { reference: ReferenceOf<object> } = $props();
+	let { reference, label }: { reference: ReferenceOf<object>; label: string } = $props();
 
 	const isPropDoc = (doc: PropDoc | SnippetDoc): doc is PropDoc => 'type' in doc;
 
@@ -17,6 +17,7 @@
 
 <div class="overflow-x-auto rounded-2xl border border-line bg-surface">
 	<table class="w-full min-w-[560px] border-collapse text-left text-sm">
+		<caption class="sr-only">{label}</caption>
 		<thead>
 			<tr>
 				<th scope="col" class={heading}>Prop</th>
