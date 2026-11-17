@@ -13,12 +13,14 @@ test('the live select is labelled and binds its value', async ({ page }) => {
 	await page.goto('/select');
 	const demo = page.locator('section[aria-labelledby="demo"]');
 	await demo.getByRole('combobox', { name: 'Country' }).click();
+	await expect(page.getByRole('listbox', { name: 'Country' })).toBeVisible();
 	await page.getByRole('option', { name: 'Thailand' }).click();
 	await expect(demo.getByRole('status')).toHaveText("value = 'th'");
 });
 
 test('a deep link lands on its section', async ({ page }) => {
 	await page.goto('/select#keyboard');
+	await expect(page).toHaveURL(/#keyboard$/);
 	await expect(page.locator('#keyboard')).toBeInViewport();
 });
 
@@ -36,13 +38,15 @@ for (const [route, files] of [
 	}
 }
 
-test('every section of both pages is present', async ({ page }) => {
-	const sections = {
-		'/dropdown-menu': ['demo', 'usage', 'props', 'snippets', 'keyboard', 'attributes', 'recipe', 'behaviour'],
-		'/select': ['demo', 'usage', 'labelling', 'props', 'snippets', 'keyboard', 'attributes', 'forms', 'recipe', 'behaviour']
-	};
-	for (const [route, ids] of Object.entries(sections)) {
+const sectionIds = {
+	'/dropdown-menu': ['demo', 'usage', 'props', 'snippets', 'keyboard', 'attributes', 'recipe', 'behaviour'],
+	'/select': ['demo', 'usage', 'labelling', 'props', 'snippets', 'keyboard', 'attributes', 'forms', 'recipe', 'behaviour']
+};
+
+for (const [route, ids] of Object.entries(sectionIds)) {
+	test(`${route} has its sections in order`, async ({ page }) => {
 		await page.goto(route);
-		for (const id of ids) await expect(page.locator(`h2#${id}`)).toBeVisible();
-	}
-});
+		const found = await page.locator('main h2').evaluateAll((nodes) => nodes.map((node) => node.id));
+		expect(found).toEqual(ids);
+	});
+}

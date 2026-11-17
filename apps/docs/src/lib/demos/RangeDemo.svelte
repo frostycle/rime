@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { demoCard } from '#lib/styles.js';
 	import type { DateRange } from '@frostycle/rime/date-picker';
 	import DateField from './DateField.svelte';
 	import DateRangeField from './DateRangeField.svelte';
@@ -13,7 +14,7 @@
 	const tab = 'min-h-10 cursor-pointer rounded-lg px-3.5 text-sm font-semibold aria-pressed:bg-surface aria-pressed:shadow-sm';
 </script>
 
-<div class="rounded-2xl border border-line bg-surface p-6">
+<div class={demoCard}>
 	<div role="group" aria-label="Picker type" class="inline-flex gap-1 rounded-xl bg-desk p-1">
 		<button type="button" class={tab} aria-pressed={kind === 'range'} onclick={() => (kind = 'range')}>Range</button>
 		<button type="button" class={tab} aria-pressed={kind === 'single'} onclick={() => (kind = 'single')}>Single</button>

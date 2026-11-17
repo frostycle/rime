@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { demoCard } from '#lib/styles.js';
 	import type { DropdownMenuProps } from '@frostycle/rime/dropdown-menu';
 	import AppMenu from './AppMenu.svelte';
 
@@ -9,7 +10,7 @@
 	const items: DropdownMenuProps['items'] = [
 		{ label: 'Edit', onselect: pick('Edit') },
 		{ label: 'Duplicate', onselect: pick('Duplicate') },
-		{ label: 'View docs', href: '#demo' },
+		{ label: 'View docs', href: '#usage' },
 		{ type: 'separator' },
 		{
 			type: 'group',
@@ -22,7 +23,7 @@
 	];
 </script>
 
-<div class="rounded-2xl border border-line bg-surface p-6">
+<div class={demoCard}>
 	<div class="flex min-h-[260px] flex-col items-start gap-4">
 		<AppMenu {items} label="Actions" />
 		<p class="m-0 text-sm text-fg-muted">

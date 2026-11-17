@@ -42,9 +42,8 @@ test('every documented prop of both pickers is listed', async ({ page }) => {
 	}
 });
 
-test('every section of the page is present', async ({ page }) => {
+test('the page has its sections in order', async ({ page }) => {
 	await page.goto('/date-pickers');
-	for (const id of ['demo', 'usage', 'props', 'snippets', 'keyboard', 'attributes', 'recipe', 'url-values', 'non-modal']) {
-		await expect(page.locator(`h2#${id}`)).toBeVisible();
-	}
+	const found = await page.locator('main h2').evaluateAll((nodes) => nodes.map((node) => node.id));
+	expect(found).toEqual(['demo', 'usage', 'props', 'snippets', 'keyboard', 'attributes', 'recipe', 'url-values', 'non-modal']);
 });

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { demoCard } from '#lib/styles.js';
 	import type { SelectProps } from '@frostycle/rime/select';
 	import AppSelect from './AppSelect.svelte';
 
@@ -16,7 +17,7 @@
 	];
 </script>
 
-<div class="rounded-2xl border border-line bg-surface p-6">
+<div class={demoCard}>
 	<div class="flex min-h-[260px] flex-col items-start gap-2">
 		<label for="country" class="text-sm font-semibold">Country</label>
 		<AppSelect id="country" {items} bind:value={country} name="country" placeholder="Choose a country" />
