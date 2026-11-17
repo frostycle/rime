@@ -1,6 +1,6 @@
 {
 	"name": "@frostycle/rime",
-	"version": "0.0.1",
+	"version": "0.1.0",
 	"scripts": {
 		"dev": "svelte-package --watch",
 		"build": "svelte-package && publint",
@@ -70,5 +70,12 @@
 	"publishConfig": {
 		"access": "public"
 	},
-	"description": "Headless, snippet-based UI primitives for Svelte 5."
+	"description": "Headless, snippet-based UI primitives for Svelte 5.",
+	"homepage": "https://rime.frostycle.com",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/frostycle/rime.git",
+		"directory": "packages/rime"
+	},
+	"bugs": "https://github.com/frostycle/rime/issues"
 }
