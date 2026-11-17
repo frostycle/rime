@@ -1,5 +1,7 @@
 # Rime
 
+[![npm](https://img.shields.io/npm/v/@frostycle/rime)](https://www.npmjs.com/package/@frostycle/rime)
+
 Headless, snippet-based UI primitives for Svelte 5.
 
 | Path | Contents |
