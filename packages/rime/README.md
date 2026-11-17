@@ -1,6 +1,6 @@
 # @frostycle/rime
 
-Headless UI primitives for Svelte 5: a small API with no nested components, customised through snippets. The library applies no styles except inline popup positioning.
+Headless, snippet-based UI primitives for Svelte 5: a small API with no nested components. The library applies no styles except inline popup positioning.
 
 ## Install
 
