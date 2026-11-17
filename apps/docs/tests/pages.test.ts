@@ -26,12 +26,21 @@ test('styling keeps the animating section', async ({ page }) => {
 	await expect(page.locator('#animate')).toBeAttached();
 });
 
-test('every evidence link on How it is built points into the repo', async ({ page }) => {
+test('every evidence link on How it is built points into the repo or the npm package', async ({ page }) => {
 	await page.goto('/how-its-built');
 	const hrefs = await page.locator('main a[href^="http"]').evaluateAll((links) => links.map((a) => a.getAttribute('href')));
 	expect(hrefs.length).toBeGreaterThan(4);
-	for (const href of hrefs) expect(href).toMatch(/^https:\/\/github\.com\/frostycle\/rime\/blob\/main\//);
-	await expect(page.getByText(/provenance/i)).toHaveCount(0);
+	for (const href of hrefs)
+		expect(href).toMatch(/^https:\/\/(github\.com\/frostycle\/rime\/blob\/main\/|www\.npmjs\.com\/package\/@frostycle\/rime\/)/);
+});
+
+test('provenance is claimed from 0.1.1 and linked to that version on npm', async ({ page }) => {
+	await page.goto('/how-its-built');
+	await expect(page.getByText(/^From 0\.1\.1, each release .* signed npm provenance statement/)).toBeVisible();
+	await expect(page.getByRole('link', { name: 'Provenance on npm' })).toHaveAttribute(
+		'href',
+		'https://www.npmjs.com/package/@frostycle/rime/v/0.1.1#provenance'
+	);
 });
 
 test('installation shows the install command and the Svelte requirement', async ({ page }) => {
