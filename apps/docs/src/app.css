@@ -1,3 +1,67 @@
 @import 'tailwindcss';
 
 @custom-variant dark (&:where([data-theme='dark'], [data-theme='dark'] *));
+
+:root,
+[data-theme='light'] {
+	--page: #f9fafc;
+	--surface: #ffffff;
+	--text: #181b23;
+	--text2: #565d6d;
+	--border: #e3e6ed;
+	--accent: #3a56d4;
+	--on-accent: #ffffff;
+	--accent-soft: #e1e8fd;
+	--accent-text: #2f45ad;
+	--code: #f2f4f8;
+	--hover: rgba(24, 27, 35, 0.07);
+	--hairline: rgba(24, 27, 35, 0.1);
+	--disabled: #6b7280;
+	--desk: linear-gradient(140deg, #a9c6ee 0%, #c5c6f2 50%, #e6d5ee 100%);
+	--glass: rgba(255, 255, 255, 0.72);
+	--glass-border: rgba(255, 255, 255, 0.85);
+	--glass-shadow: 0 8px 28px rgba(15, 22, 54, 0.16), inset 0 1px 0 rgba(255, 255, 255, 0.9);
+	color-scheme: light;
+}
+
+[data-theme='dark'] {
+	--page: #0e1016;
+	--surface: #181b23;
+	--text: #f2f4f8;
+	--text2: #b4bac6;
+	--border: #262b36;
+	--accent: #7c9bff;
+	--on-accent: #0f1636;
+	--accent-soft: rgba(124, 155, 255, 0.16);
+	--accent-text: #9db2f7;
+	--code: #262b36;
+	--hover: rgba(255, 255, 255, 0.1);
+	--hairline: rgba(255, 255, 255, 0.13);
+	--disabled: #9aa1b0;
+	--desk: linear-gradient(140deg, #15213f 0%, #262650 50%, #3a2547 100%);
+	--glass: rgba(38, 43, 54, 0.72);
+	--glass-border: rgba(255, 255, 255, 0.13);
+	--glass-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.14);
+	color-scheme: dark;
+}
+
+@theme inline {
+	--color-page: var(--page);
+	--color-surface: var(--surface);
+	--color-fg: var(--text);
+	--color-fg-muted: var(--text2);
+	--color-line: var(--border);
+	--color-accent: var(--accent);
+	--color-on-accent: var(--on-accent);
+	--color-accent-soft: var(--accent-soft);
+	--color-accent-fg: var(--accent-text);
+	--color-code: var(--code);
+	--color-hover: var(--hover);
+	--color-hairline: var(--hairline);
+	--color-disabled: var(--disabled);
+}
+
+body {
+	background: var(--page);
+	color: var(--text);
+}

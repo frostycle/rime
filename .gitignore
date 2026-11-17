@@ -33,3 +33,7 @@ vite.config.ts.timestamp-*
 .idea/
 
 /docs/
+
+# Playwright output
+test-results/
+playwright-report/

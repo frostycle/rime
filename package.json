@@ -8,6 +8,7 @@
 		"build": "pnpm --filter @frostycle/rime build && pnpm --filter docs build",
 		"check": "pnpm --filter @frostycle/rime build && pnpm -r check",
 		"test:unit": "pnpm --filter @frostycle/rime test:unit",
-		"test:browser": "pnpm --filter @frostycle/rime test:browser"
+		"test:browser": "pnpm --filter @frostycle/rime test:browser",
+		"test:docs": "pnpm --filter @frostycle/rime build && pnpm --filter docs test"
 	}
 }
