@@ -34,7 +34,10 @@ jobs:
 
       - run: pnpm test:browser
 
-      # npm, not pnpm: npm exchanges the workflow's OIDC token for a publish credential and attaches provenance.
-      - name: Publish
+      # The trusted publisher on npm grants only `npm stage publish` (needs npm 11.19+): a plain
+      # `npm publish` is refused with 403. npm, not pnpm, because npm exchanges the OIDC token.
+      - run: npm install -g npm@11.19.0
+
+      - name: Stage the publish for approval on npmjs.com
         working-directory: packages/rime
-        run: npm publish
+        run: npm stage publish .
