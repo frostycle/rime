@@ -4,7 +4,7 @@ SvelteKit with `@sveltejs/adapter-cloudflare`, fully prerendered. It deploys to 
 
 ## Cloudflare settings
 
-The adapter is configured without a wrangler config, so it builds for Cloudflare Pages.
+The output is for a Cloudflare **Pages** project. The adapter has no wrangler config, which makes it build for Pages (`CF_PAGES` or no `main`/`assets` selects it); this is inferred from the adapter source and unverified until the first deploy. A Workers project would need a wrangler config with `assets.directory` and a different setup.
 
 | Setting | Value |
 |---|---|
@@ -22,9 +22,11 @@ Cloudflare's build image documentation lists `PNPM_VERSION` as the way to choose
 
 ### What reaches the worker
 
-The adapter writes `_worker.js` and `_routes.json` next to the prerendered pages. `_routes.json` excludes every prerendered route, `/favicon.svg` and `/_app/*`, so those are served as static assets and never invoke the worker.
+Nothing. `vite.config.ts` sets `routes: { include: ['/*'], exclude: ['/*'] }`, so `_routes.json` excludes every path and the generated `_worker.js` is never invoked (the adapter requires a non-empty `include`, and `exclude` wins). Pages serves the prerendered pages and assets directly and redirects a trailing slash itself.
 
-Any other URL, including a prerendered route with a trailing slash, does invoke the worker, which renders the SvelteKit 404 page with a link home. Serving unknown URLs statically would replace that page with the adapter's plain-text `404.html` ("Not Found"), so this is left as is.
+`fallback: 'spa'` makes the adapter emit `404.html` as a client-rendered shell. Pages serves it with status 404 for any unknown URL, and the SvelteKit router then renders the designed error page with its link home. The cost is that an unknown URL visited without JavaScript shows a blank page with the 404 status.
+
+`pnpm test:docs` checks this against the built output served by `wrangler pages dev` (port 4174); the other tests use `vite preview`.
 
 ## Tests
 

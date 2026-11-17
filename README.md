@@ -5,7 +5,7 @@ Headless, snippet-based UI primitives for Svelte 5.
 | Path | Contents |
 |---|---|
 | [`packages/rime`](packages/rime) | The published library, [`@frostycle/rime`](packages/rime/README.md) |
-| [`apps/docs`](apps/docs) | The documentation site, deployed to [rime.frostycle.com](https://rime.frostycle.com) |
+| [`apps/docs`](apps/docs) | The documentation site, built for [rime.frostycle.com](https://rime.frostycle.com) |
 
 ## Development
 
