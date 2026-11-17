@@ -1,0 +1,40 @@
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+          registry-url: https://registry.npmjs.org
+
+      - name: Check the tag matches the package version
+        run: test "v$(node -p "require('./packages/rime/package.json').version")" = "$GITHUB_REF_NAME"
+
+      - run: pnpm install --frozen-lockfile
+
+      - run: pnpm --filter @frostycle/rime exec playwright install --with-deps chromium webkit firefox
+
+      - run: pnpm check
+
+      - run: pnpm test:unit
+
+      - run: pnpm test:browser
+
+      # npm, not pnpm: npm exchanges the workflow's OIDC token for a publish credential and attaches provenance.
+      - name: Publish
+        working-directory: packages/rime
+        run: npm publish
