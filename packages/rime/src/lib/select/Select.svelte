@@ -283,7 +283,7 @@
 	<button {...triggerProps} class={classes.trigger}>{selected?.label ?? placeholder ?? ''}</button>
 {/if}
 
-{#if name}
+{#if name && !disabled}
 	<input type="hidden" {name} value={value ?? ''} />
 {/if}
 

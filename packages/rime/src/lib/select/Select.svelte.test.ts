@@ -199,6 +199,13 @@ test('name writes a hidden input, and form reset restores the mounted value', as
 	expect(hiddenInput().value).toBe('id');
 });
 
+test('a disabled select submits nothing, like a disabled native select', async () => {
+	const { rerender } = await render(FormSelectFixture, { value: 'id', disabled: true });
+	expect(Object.fromEntries(new FormData(document.querySelector('form')!))).toEqual({});
+	await rerender({ disabled: false });
+	expect(Object.fromEntries(new FormData(document.querySelector('form')!))).toEqual({ country: 'id' });
+});
+
 test('a value with no matching option shows the placeholder and is kept', async () => {
 	await render(FormSelectFixture, { value: 'zz', placeholder: 'Choose' });
 	await expect.element(field()).toHaveTextContent('Choose');

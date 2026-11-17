@@ -309,7 +309,7 @@ The list takes its name from the `<label>` text when it opens. Naming a custom t
 | `name` | `string` | Renders a hidden input carrying the value, empty when `null`. |
 | `placeholder` | `string` | Trigger text while the value is `null`. |
 | `placement` | `Placement` from `@floating-ui/dom` | Default `bottom-start`. |
-| `disabled` | `boolean` | Disables the trigger, and closes the list if it is open. |
+| `disabled` | `boolean` | Disables the trigger, closes the list if it is open, and renders no hidden input. |
 | `transition` | `boolean` | Keeps the popup mounted through its CSS transition, as on the date pickers. |
 | `classes` | `{ trigger, popup, option, separator, group, groupLabel }` | Classes for default-rendered elements. |
 
