@@ -3,7 +3,7 @@
 	import { createAttachmentKey } from 'svelte/attachments';
 	import { Popover } from '../internal/popover.svelte.js';
 	import { Menu } from './menu.svelte.js';
-	import { entryOffsets, flattenItems, isGroup, isSeparator } from './menu-items.js';
+	import { entryOffsets, flattenItems, isGroup, isSeparator } from '../internal/list-items.js';
 	import type { DropdownMenuProps, MenuElementProps, MenuItem } from './types.js';
 
 	const ROOT_KEY = createAttachmentKey();

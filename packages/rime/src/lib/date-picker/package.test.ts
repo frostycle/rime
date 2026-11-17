@@ -6,7 +6,7 @@ import pkg from '../../../package.json';
 test('the package has one runtime dependency and the right exports', () => {
 	expect(Object.keys(pkg.dependencies)).toEqual(['@floating-ui/dom']);
 	expect(pkg.peerDependencies.svelte).toBe('^5.29.0');
-	expect(Object.keys(pkg.exports)).toEqual(['./date-picker', './dropdown-menu']);
+	expect(Object.keys(pkg.exports)).toEqual(['./date-picker', './dropdown-menu', './select']);
 	expect(pkg.publishConfig.access).toBe('public');
 });
 

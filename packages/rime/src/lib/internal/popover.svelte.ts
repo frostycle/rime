@@ -6,7 +6,7 @@ export type CloseReason = 'commit' | 'escape' | 'outside' | 'focus-left';
 
 export type PopoverOptions = {
 	animated?: () => boolean;
-	role?: 'dialog' | 'menu';
+	role?: 'dialog' | 'menu' | 'listbox';
 	placement?: () => Placement;
 };
 
@@ -28,7 +28,7 @@ export class Popover {
 	#id: string;
 	#onClose: (reason: CloseReason) => void;
 	#animated: () => boolean;
-	#role: 'dialog' | 'menu';
+	#role: 'dialog' | 'menu' | 'listbox';
 	#placement: () => Placement;
 	#triggerKey = createAttachmentKey();
 	#contentKey = createAttachmentKey();

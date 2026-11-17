@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { page } from '$app/state';
 	import { DropdownMenu, type MenuClasses, type MenuEntry } from '@frostycle/rime/dropdown-menu';
+	import { Select, type SelectClasses, type SelectEntry } from '@frostycle/rime/select';
 	import {
 		addDays,
 		DatePicker,
@@ -16,6 +17,7 @@
 	let due = $state<string | null>(null);
 	let custom = $state<string | null>(null);
 	let lastAction = $state<string | null>(null);
+	let country = $state<string | null>(null);
 
 	const focusRing = 'outline-blue-700 dark:outline-blue-300';
 	const buttonBase = `cursor-pointer rounded-md border bg-white px-3 py-2 text-slate-900 dark:bg-slate-800 dark:text-slate-100 ${focusRing}`;
@@ -69,6 +71,27 @@
 				{ label: 'Archive', onselect: () => (lastAction = 'Archive') },
 				{ label: 'Delete', disabled: true }
 			]
+		}
+	];
+
+	const selectClasses: SelectClasses = {
+		trigger: `${button} min-w-48 text-start data-placeholder:text-slate-600 dark:data-placeholder:text-slate-300 data-disabled:opacity-50`,
+		popup: menuClasses.popup,
+		option:
+			'block w-full cursor-pointer rounded px-2.5 py-1.5 text-start data-highlighted:bg-blue-100 data-selected:font-semibold data-disabled:cursor-not-allowed data-disabled:opacity-50 dark:data-highlighted:bg-blue-900',
+		separator: menuClasses.separator,
+		groupLabel: menuClasses.groupLabel
+	};
+
+	const countries: SelectEntry[] = [
+		{ value: 'id', label: 'Indonesia' },
+		{ value: 'th', label: 'Thailand' },
+		{ value: 'sg', label: 'Singapore', disabled: true },
+		{ type: 'separator' },
+		{
+			type: 'group',
+			label: 'Coming soon',
+			items: [{ value: 'vn', label: 'Vietnam' }]
 		}
 	];
 
@@ -157,6 +180,20 @@
 			<h2 class={sectionTitle}>Dropdown menu</h2>
 			<DropdownMenu items={menuItems} label="Actions" transition classes={menuClasses} />
 			<p class={note}>Last action: <output>{lastAction ?? 'none'}</output></p>
+		</section>
+
+		<section>
+			<h2 class={sectionTitle}>Select</h2>
+			<label for="country" class="mb-1 block">Country</label>
+			<Select
+				id="country"
+				items={countries}
+				bind:value={country}
+				placeholder="Choose a country"
+				transition
+				classes={selectClasses}
+			/>
+			<p class={note}>Value: <output>{country ?? 'none'}</output></p>
 		</section>
 	</div>
 </main>

@@ -1,6 +1,13 @@
-import { firstEnabled, lastEnabled, matchTypeahead, stepEnabled } from './menu-items.js';
+import {
+	firstEnabled,
+	isTypeaheadKey,
+	lastEnabled,
+	matchTypeahead,
+	stepEnabled
+} from '../internal/list-items.js';
 import type { MenuItem } from './types.js';
 import { interactionProps } from '../internal/interaction.js';
+import { createPointerMoveFilter } from '../internal/pointer.js';
 
 const TYPEAHEAD_RESET_MS = 500;
 const INDEX_ATTRIBUTE = 'data-menu-index';
@@ -18,7 +25,7 @@ export class Menu<T extends MenuItem> {
 	#typedTimer: ReturnType<typeof setTimeout> | undefined;
 	#focusWithin = false;
 	#focusedItem: T | null = null;
-	#lastPointer: { x: number; y: number } | null = null;
+	#pointer = createPointerMoveFilter();
 
 	constructor({ items, onTab }: MenuOptions<T>) {
 		this.#items = items;
@@ -46,7 +53,7 @@ export class Menu<T extends MenuItem> {
 			},
 			{ signal: controller.signal }
 		);
-		element.addEventListener('pointerleave', () => (this.#lastPointer = null), {
+		element.addEventListener('pointerleave', () => this.#pointer.reset(), {
 			signal: controller.signal
 		});
 		return () => {
@@ -99,7 +106,7 @@ export class Menu<T extends MenuItem> {
 				else activate(item);
 			},
 			onpointermove: (event: PointerEvent) => {
-				if (this.#isRealPointerMove(event) && !disabled && event.pointerType !== 'touch') {
+				if (this.#pointer.moved(event) && !disabled && event.pointerType !== 'touch') {
 					(event.currentTarget as HTMLElement).focus();
 				}
 			},
@@ -140,19 +147,11 @@ export class Menu<T extends MenuItem> {
 			this.#activateWithSpace(event);
 			return;
 		}
-		if (event.key.length === 1 && !event.ctrlKey && !event.metaKey && !event.altKey) {
+		if (isTypeaheadKey(event)) {
 			event.preventDefault();
 			this.#typeahead(event.key, current);
 		}
 	};
-
-	// Items that scroll or appear under a parked pointer fire pointerenter, and WebKit also sends
-	// pointermove, so only a changed position counts as the user moving.
-	#isRealPointerMove({ clientX: x, clientY: y }: PointerEvent): boolean {
-		const moved = this.#lastPointer?.x !== x || this.#lastPointer?.y !== y;
-		this.#lastPointer = { x, y };
-		return moved;
-	}
 
 	#indexOfFocusedItem(items: T[]): number {
 		const focused = this.#focusedItem;

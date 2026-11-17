@@ -1,6 +1,6 @@
 # @frostycle/rime
 
-Headless UI primitives for Svelte 5: a small API with no nested components, customised through snippets. The library applies no styles except inline popup positioning.
+Headless, snippet-based UI primitives for Svelte 5: a small API with no nested components. The library applies no styles except inline popup positioning.
 
 ## Install
 
@@ -265,6 +265,129 @@ Copy this wrapper into your project and own it. It needs Tailwind CSS v4.
 - Clicks inside the menu bubble like any native click. If a parent such as a table row handles clicks, stop them on a wrapper around the menu.
 - Disabling an open menu closes it and disables the trigger, so focus falls to `<body>`. Move focus yourself if you disable a menu while it's in use.
 - Items have no ids, so a recreated list matches the focused item by label. If labels repeat and the list also reorders, focus can land on the other item with that label.
+
+## Select
+
+A button that opens a list of options and sets one value, defined as data. It follows the select-only combobox pattern: focus stays on the trigger.
+
+```svelte
+<script>
+	import { Select } from '@frostycle/rime/select';
+
+	let country = $state(null);
+
+	const items = [
+		{ value: 'id', label: 'Indonesia' },
+		{ value: 'th', label: 'Thailand' },
+		{ type: 'separator' },
+		{
+			type: 'group',
+			label: 'Coming soon',
+			items: [{ value: 'vn', label: 'Vietnam', disabled: true }]
+		}
+	];
+</script>
+
+<label for="country">Country</label>
+<Select id="country" {items} bind:value={country} name="country" placeholder="Choose a country" />
+```
+
+### Labelling
+
+Every select needs a `<label for>` pointing at its `id`; a combobox does not take its name from its text. Use `<label for>` rather than a wrapping `<label>`: a wrapping label's text includes the trigger's own text, which would put the current value into the list's accessible name. Clicking the label focuses the trigger without opening the list. A custom `trigger` snippet must keep the spread `id`.
+
+The list takes its name from the `<label>` text when it opens. Naming a custom trigger only with `aria-label` or `aria-labelledby` leaves the list unnamed, so keep a `<label for>` even then.
+
+### Props
+
+| Prop | Type | Notes |
+|---|---|---|
+| `items` | `(T \| SelectSeparator \| SelectGroup<T>)[]` | Required. `T extends SelectOption`, so extra fields such as an icon flow into the `option` snippet. |
+| `value` | `string \| null` | Bindable. Default `null`, meaning nothing is selected. |
+| `onchange` | `(value: string \| null) => void` | Called when the user picks a different value. |
+| `id` | `string` | The trigger's id, so `<label for>` names the field. Defaults to a generated id. |
+| `name` | `string` | Renders a hidden input carrying the value, empty when `null`. |
+| `placeholder` | `string` | Trigger text while the value is `null`. |
+| `placement` | `Placement` from `@floating-ui/dom` | Default `bottom-start`. |
+| `disabled` | `boolean` | Disables the trigger, closes the list if it is open, and renders no hidden input. |
+| `transition` | `boolean` | Keeps the popup mounted through its CSS transition, as on the date pickers. |
+| `classes` | `{ trigger, popup, option, separator, group, groupLabel }` | Classes for default-rendered elements. |
+
+`SelectOption` is `{ value, label, disabled? }`. A `value` with no matching option shows the placeholder and marks nothing selected; the component does not reset it. A form `reset` restores the value from when the component mounted. `required` and browser validation are not supported yet.
+
+### Snippets
+
+All optional. Spread each `props` onto your element.
+
+| Snippet | Arguments |
+|---|---|
+| `trigger` | `props, open, selected` (the selected option, or `null`) |
+| `popup` | `props, content` (render `content` for the default body) |
+| `option` | `option, props, selected, highlighted, disabled` |
+| `separator` | `props` |
+| `groupLabel` | `label, props` |
+
+Separators render with `role="none"` inside the list, since a listbox may contain only options and groups.
+
+### Keyboard
+
+| Key | Action |
+|---|---|
+| Enter, Space, Down, Up on the trigger | Open the list |
+| Home, End on the trigger | Open with the first or last enabled option highlighted |
+| Printable characters on the trigger | Open at the first matching enabled option |
+| Down, Up | Move between enabled options, stopping at the ends |
+| Home, End | Go to the first or last enabled option |
+| Page Down, Page Up | Move ten enabled options |
+| Printable characters | Jump to the next enabled option starting with what was typed. Typed text resets after 500 ms, repeating one character cycles through matches, and Space counts as typed text while it is being collected |
+| Enter, Space | Select the highlighted option and close |
+| Tab | Select the highlighted option, close, and let focus move on |
+| Escape | Close without changing the value |
+
+Focus stays on the trigger; the highlighted option is announced through `aria-activedescendant`. Disabled options are skipped. Hovering an enabled option highlights it, so pointer and keyboard share one highlight.
+
+### State attributes
+
+| Element | Attributes |
+|---|---|
+| Trigger | `data-open`, `data-disabled`, `data-placeholder`, `data-hover`, `data-focus`, `data-active` |
+| Popup | `data-open`, plus `data-closed`, `data-enter` and `data-leave` with `transition` |
+| Option | `data-highlighted`, `data-selected`, `data-disabled` |
+
+### Tailwind recipe
+
+Copy this wrapper into your project and own it. It needs Tailwind CSS v4.
+
+```svelte
+<!-- src/lib/components/AppSelect.svelte -->
+<script lang="ts" generics="T extends SelectOption">
+	import {
+		Select,
+		type SelectClasses,
+		type SelectOption,
+		type SelectProps
+	} from '@frostycle/rime/select';
+
+	let { value = $bindable(null), ...props }: SelectProps<T> = $props();
+
+	const classes: SelectClasses = {
+		trigger:
+			'min-w-48 rounded-md border border-gray-300 bg-white px-3 py-2 text-start text-sm text-gray-900 data-hover:bg-gray-50 data-focus:outline-2 data-focus:outline-offset-2 data-focus:outline-blue-600 data-open:border-blue-600 data-placeholder:text-gray-500 data-disabled:opacity-50 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 dark:data-hover:bg-gray-700',
+		popup:
+			'min-w-48 rounded-lg border border-gray-200 bg-white p-1.5 text-sm text-gray-900 shadow-lg transition duration-150 ease-out outline-none data-closed:-translate-y-1 data-closed:opacity-0 motion-reduce:transition-none dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100',
+		option:
+			'block w-full rounded-md px-2.5 py-1.5 text-start data-highlighted:bg-gray-100 data-selected:font-semibold data-disabled:opacity-50 dark:data-highlighted:bg-gray-700',
+		separator: 'mx-1 my-1.5 h-px bg-gray-200 dark:bg-gray-700',
+		groupLabel: 'px-2.5 pt-1.5 pb-1 text-xs font-semibold text-gray-500 dark:text-gray-400'
+	};
+</script>
+
+<Select transition {classes} bind:value {...props} />
+```
+
+### Behaviour to plan for
+
+- Disabling an open select closes it and disables the trigger, so focus falls to `<body>`. Move focus yourself if you disable a select while it's in use.
 
 ## License
 
