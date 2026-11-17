@@ -31,7 +31,6 @@
 <Select id="country" {items} bind:value={country} name="country" placeholder="Choose a country" />`;
 
 	const recipeUsage = '<AppSelect id="country" {items} bind:value={country} name="country" />';
-
 </script>
 
 <svelte:head>

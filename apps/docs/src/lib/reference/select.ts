@@ -38,6 +38,7 @@ export const select: ComponentReference<SelectProps> = {
 		},
 		transition: {
 			type: 'boolean',
+			default: 'false',
 			notes: 'Keeps the popup mounted through its CSS transition, as on the date pickers.'
 		},
 		classes: {

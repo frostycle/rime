@@ -46,7 +46,6 @@
 
 const from = url.searchParams.get('from');
 const value = isIsoDate(from) ? from : null;`;
-
 </script>
 
 <svelte:head>
@@ -84,7 +83,8 @@ const value = isIsoDate(from) ? from : null;`;
 <ReferenceSections reference={datePickers} name="Date picker">
 	{#snippet attributesNote()}
 		<code class={inlineCode}>data-focus</code> appears for keyboard focus only, and
-		<code class={inlineCode}>data-hover</code> ignores touch.
+		<code class={inlineCode}>data-hover</code> ignores touch. Disabled elements take neither
+		<code class={inlineCode}>data-hover</code> nor <code class={inlineCode}>data-active</code>.
 	{/snippet}
 </ReferenceSections>
 

@@ -28,7 +28,6 @@
 <DropdownMenu {items} label="Actions" />`;
 
 	const recipeUsage = '<AppMenu {items} label="Actions" />';
-
 </script>
 
 <svelte:head>

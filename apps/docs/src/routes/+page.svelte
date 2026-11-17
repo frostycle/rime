@@ -9,7 +9,7 @@
 		{ href: '/date-pickers', name: 'Date picker', blurb: 'One date, as a timezone-safe string, with presets and form support.' },
 		{ href: '/date-pickers', name: 'Date range picker', blurb: 'Two clicks, a live preview, length limits and a multi-month view.' },
 		{ href: '/dropdown-menu', name: 'Dropdown menu', blurb: 'Actions, links and groups, with arrow keys and type-to-jump.' },
-		{ href: '/select', name: 'Select', blurb: 'One value from a list, labelled like a native field, with form support.', badge: 'Next' }
+		{ href: '/select', name: 'Select', blurb: 'One value from a list, labelled like a native field, with form support.' }
 	];
 
 	const features = [
@@ -20,7 +20,7 @@
 		},
 		{
 			title: 'Server rendering',
-			blurb: 'Works in SvelteKit with no hydration mismatch, and without it in plain Svelte.',
+			blurb: 'Renders on the server, so it works in SvelteKit and in plain Svelte.',
 			icon: 'M3 4.5h14v4H3z M3 11.5h14v4H3z M6 6.5h.01M6 13.5h.01'
 		},
 		{
@@ -65,13 +65,10 @@
 <section class="mt-24" aria-labelledby="components">
 	<h2 id="components" class="text-3xl font-bold tracking-tight">Components</h2>
 	<div class="mt-8 grid gap-6 [grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr))]">
-		{#each components as { href, name, blurb, badge } (name)}
+		{#each components as { href, name, blurb } (name)}
 			<a class="block rounded-2xl border border-line bg-surface p-7 no-underline" {href}>
 				<span class="flex items-center gap-2 text-[17px] font-semibold">
 					{name}
-					{#if badge}
-						<span class="rounded-full bg-accent-soft px-2 py-0.5 text-[11px] font-semibold text-accent-fg">{badge}</span>
-					{/if}
 				</span>
 				<p class="m-0 mt-2 text-sm leading-normal text-fg-muted">{blurb}</p>
 			</a>

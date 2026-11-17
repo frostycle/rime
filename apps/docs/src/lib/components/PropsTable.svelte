@@ -16,9 +16,8 @@
 </script>
 
 <!-- svelte-ignore a11y_no_noninteractive_tabindex -- keyboard users need focus to scroll the table -->
-<div class="overflow-x-auto rounded-2xl border border-line bg-surface" role="region" aria-label={label} tabindex="0">
+<div class="overflow-x-auto rounded-2xl border border-line bg-surface" role="group" aria-label={label} tabindex="0">
 	<table class="w-full min-w-[560px] border-collapse text-left text-sm">
-		<caption class="sr-only">{label}</caption>
 		<thead>
 			<tr>
 				<th scope="col" class={heading}>Prop</th>

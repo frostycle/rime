@@ -20,6 +20,7 @@ export const dropdownMenu: ComponentReference<DropdownMenuProps> = {
 		},
 		transition: {
 			type: 'boolean',
+			default: 'false',
 			notes: 'Keeps the popup mounted through its CSS transition, as on the date pickers.'
 		},
 		classes: {

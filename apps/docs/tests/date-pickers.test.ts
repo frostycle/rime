@@ -29,7 +29,7 @@ for (const [label, file] of [
 	test(`the recipe shows ${file} exactly as the demo runs it`, async ({ page }) => {
 		const source = readFileSync(new URL(`../src/lib/demos/${file}`, import.meta.url), 'utf8');
 		await page.goto('/date-pickers');
-		const shown = page.locator('section[aria-labelledby="recipe"]').getByRole('region', { name: label });
+		const shown = page.locator('section[aria-labelledby="recipe"]').getByRole('group', { name: label });
 		expect((await shown.textContent())?.trimEnd()).toBe(source.trimEnd());
 	});
 }

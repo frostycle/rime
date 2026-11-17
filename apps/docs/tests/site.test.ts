@@ -5,6 +5,9 @@ import { runAxe } from './axe.ts';
 const THEMES = ['light', 'dark'] as const;
 const PAGE_BACKGROUND = { light: 'rgb(249, 250, 252)', dark: 'rgb(14, 16, 22)' };
 
+const TABLE_ROUTES = ['/date-pickers', '/dropdown-menu', '/select'];
+const CODE_ROUTES = ['/', '/installation', '/styling', ...TABLE_ROUTES];
+
 for (const route of ROUTES) {
 	for (const theme of THEMES) {
 		test(`${route} has one h1, landmarks, a skip link and passes axe in the ${theme} theme`, async ({ page }) => {
@@ -29,6 +32,8 @@ for (const route of ROUTES) {
 		const page = await context.newPage();
 		await page.goto(route);
 		await expect(page.locator('h1')).toBeVisible();
+		if (TABLE_ROUTES.includes(route)) await expect(page.locator('td').first()).toBeVisible();
+		if (CODE_ROUTES.includes(route)) await expect(page.locator('pre').first()).toBeVisible();
 		await context.close();
 	});
 }

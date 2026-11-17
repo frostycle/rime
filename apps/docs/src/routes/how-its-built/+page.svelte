@@ -40,7 +40,7 @@
 			links: [{ label: 'test:unit script', path: 'packages/rime/package.json' }]
 		},
 		{
-			title: 'Checks before every release',
+			title: 'Release workflow checks',
 			detail: 'The release workflow runs the type check, the unit tests and the browser tests before it publishes.',
 			links: [{ label: 'release.yml', path: '.github/workflows/release.yml' }]
 		}

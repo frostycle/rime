@@ -32,7 +32,7 @@ for (const [route, files] of [
 		test(`${route} recipe shows ${file} exactly as the demo runs it`, async ({ page }) => {
 			const source = readFileSync(new URL(`../src/lib/demos/${file}`, import.meta.url), 'utf8');
 			await page.goto(route);
-			const shown = page.locator('section[aria-labelledby="recipe"]').getByRole('region', { name: file });
+			const shown = page.locator('section[aria-labelledby="recipe"]').getByRole('group', { name: file });
 			expect((await shown.textContent())?.trimEnd()).toBe(source.trimEnd());
 		});
 	}
