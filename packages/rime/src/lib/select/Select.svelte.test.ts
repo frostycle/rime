@@ -6,6 +6,7 @@ import AllSnippetsFixture from './fixtures/AllSnippetsFixture.svelte';
 import CustomTriggerFixture from './fixtures/CustomTriggerFixture.svelte';
 import FormSelectFixture from './fixtures/FormSelectFixture.svelte';
 import LabelledSelectFixture from './fixtures/LabelledSelectFixture.svelte';
+import LateLabelFixture from './fixtures/LateLabelFixture.svelte';
 import ModalSelectFixture from './fixtures/ModalSelectFixture.svelte';
 import SelectMenuPickerFixture from './fixtures/SelectMenuPickerFixture.svelte';
 import type { SelectEntry } from './types.js';
@@ -48,6 +49,16 @@ test('clicking the label focuses the trigger without opening', async () => {
 	await page.getByText('Country').click();
 	await expect.element(field()).toHaveFocus();
 	await expect.element(page.getByRole('listbox')).not.toBeInTheDocument();
+});
+
+test('a label rendered after the select mounts also focuses without opening', async () => {
+	const { rerender } = await render(LateLabelFixture);
+	await rerender({ showLabel: true });
+	await page.getByText('Country').click();
+	await expect.element(field()).toHaveFocus();
+	await expect.element(page.getByRole('listbox')).not.toBeInTheDocument();
+	await userEvent.keyboard('{ArrowDown}');
+	await expect.element(page.getByRole('listbox', { name: 'Country' })).toBeVisible();
 });
 
 test('pressing an option keeps focus on the trigger and selects it', async () => {

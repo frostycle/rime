@@ -148,19 +148,16 @@
 	}
 
 	// A label click would otherwise reach the button and open the list, unlike a native <select>.
+	// Listening on the document covers labels rendered after the trigger.
 	function attachLabels(element: HTMLElement) {
-		const controller = new AbortController();
-		for (const label of labelsOf(element)) {
-			label.addEventListener(
-				'click',
-				(event) => {
-					event.preventDefault();
-					element.focus();
-				},
-				{ signal: controller.signal }
-			);
-		}
-		return () => controller.abort();
+		const onClick = (event: MouseEvent) => {
+			const label = event.target instanceof Element ? event.target.closest('label') : null;
+			if (label?.control !== element) return;
+			event.preventDefault();
+			element.focus();
+		};
+		document.addEventListener('click', onClick, true);
+		return () => document.removeEventListener('click', onClick, true);
 	}
 
 	function labelsOf(element: HTMLElement | null | undefined): HTMLLabelElement[] {
