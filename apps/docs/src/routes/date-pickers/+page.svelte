@@ -5,6 +5,7 @@
 	import PropsTable from '#lib/components/PropsTable.svelte';
 	import SnippetList from '#lib/components/SnippetList.svelte';
 	import RangeDemo from '#lib/demos/RangeDemo.svelte';
+	import pickerClasses from '#lib/demos/picker-classes.ts?raw';
 	import recipe from '#lib/demos/DateRangeField.svelte?raw';
 	import { datePickers } from '#lib/reference/date-pickers.js';
 
@@ -33,6 +34,10 @@
 		{#if value}<button type="button" onclick={clear}>Clear</button>{/if}
 	{/snippet}
 </DateRangePicker>`;
+
+	const singleUsage = `<form method="GET">
+	<DatePicker bind:value={due} name="due" min={today()} />
+</form>`;
 
 	const recipeUsage = '<DateRangeField bind:value={period} months={2} {presets} />';
 
@@ -73,6 +78,11 @@ const value = isIsoDate(from) ? from : null;`;
 		receives the formatted label and a <code class={inlineCode}>clear</code> function.
 	</p>
 	<div class="mt-4"><CodeBlock code={usage} label="Date range picker usage" /></div>
+	<p class={prose}>
+		<code class={inlineCode}>DatePicker</code> takes a single string. With <code class={inlineCode}>name</code> it
+		renders a hidden input, so it submits with a form.
+	</p>
+	<div class="mt-4"><CodeBlock code={singleUsage} label="Date picker usage in a form" /></div>
 </section>
 
 <section aria-labelledby="props">
@@ -108,6 +118,7 @@ const value = isIsoDate(from) ? from : null;`;
 		project and own it. It needs Tailwind CSS v4, whose bare <code class={inlineCode}>data-selected:</code> variants it
 		uses; in v3 write <code class={inlineCode}>data-[selected]:</code>.
 	</p>
+	<div class="mt-4"><CodeBlock code={pickerClasses} label="picker-classes.ts" /></div>
 	<div class="mt-4"><CodeBlock code={recipe} label="DateRangeField.svelte" /></div>
 	<div class="mt-4"><CodeBlock code={recipeUsage} label="Using DateRangeField" /></div>
 </section>
