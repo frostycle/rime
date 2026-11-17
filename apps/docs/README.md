@@ -4,11 +4,11 @@ SvelteKit with `@sveltejs/adapter-cloudflare`, fully prerendered. It deploys to 
 
 ## Cloudflare settings
 
-The output is for a Cloudflare **Pages** project. The adapter has no wrangler config, which makes it build for Pages (`CF_PAGES` or no `main`/`assets` selects it); this is inferred from the adapter source and unverified until the first deploy. A Workers project would need a wrangler config with `assets.directory` and a different setup.
+The output is for a Cloudflare **Pages** project. The adapter has no wrangler config, which makes it build for Pages (`CF_PAGES` or no `main`/`assets` selects it), confirmed by the first deploy on 2026-11-17. A Workers project would need a wrangler config with `assets.directory` and a different setup.
 
 | Setting | Value |
 |---|---|
-| Root directory | repository root |
+| Root directory | empty (the repository root, not `apps/docs`) |
 | Build command | `pnpm build` |
 | Build output directory | `apps/docs/.svelte-kit/cloudflare` |
 | `NODE_VERSION` | `24` (local development uses 24.20.0) |
