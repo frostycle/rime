@@ -296,6 +296,8 @@ A button that opens a list of options and sets one value, defined as data. It fo
 
 Every select needs a `<label for>` pointing at its `id`; a combobox does not take its name from its text. Use `<label for>` rather than a wrapping `<label>`: a wrapping label's text includes the trigger's own text, which would put the current value into the list's accessible name. Clicking the label focuses the trigger without opening the list. A custom `trigger` snippet must keep the spread `id`.
 
+The list takes its name from the `<label>` text when it opens. Naming a custom trigger only with `aria-label` or `aria-labelledby` leaves the list unnamed, so keep a `<label for>` even then.
+
 ### Props
 
 | Prop | Type | Notes |
@@ -337,7 +339,7 @@ Separators render with `role="none"` inside the list, since a listbox may contai
 | Down, Up | Move between enabled options, stopping at the ends |
 | Home, End | Go to the first or last enabled option |
 | Page Down, Page Up | Move ten enabled options |
-| Printable characters | Jump to the next enabled option starting with what was typed |
+| Printable characters | Jump to the next enabled option starting with what was typed. Typed text resets after 500 ms, repeating one character cycles through matches, and Space counts as typed text while it is being collected |
 | Enter, Space | Select the highlighted option and close |
 | Tab | Select the highlighted option, close, and let focus move on |
 | Escape | Close without changing the value |
@@ -382,6 +384,10 @@ Copy this wrapper into your project and own it. It needs Tailwind CSS v4.
 
 <Select transition {classes} bind:value {...props} />
 ```
+
+### Behaviour to plan for
+
+- Disabling an open select closes it and disables the trigger, so focus falls to `<body>`. Move focus yourself if you disable a select while it's in use.
 
 ## License
 
