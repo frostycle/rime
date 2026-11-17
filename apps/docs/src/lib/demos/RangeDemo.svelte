@@ -15,7 +15,7 @@
 </script>
 
 <div class={demoCard}>
-	<div role="group" aria-label="Picker type" class="inline-flex gap-1 rounded-xl bg-desk p-1">
+	<div role="group" aria-label="Picker type" class="inline-flex gap-1 rounded-xl bg-(image:--desk) p-1">
 		<button type="button" class={tab} aria-pressed={kind === 'range'} onclick={() => (kind = 'range')}>Range</button>
 		<button type="button" class={tab} aria-pressed={kind === 'single'} onclick={() => (kind = 'single')}>Single</button>
 	</div>
