@@ -15,7 +15,8 @@
 	const cell = 'border-b border-line px-4 py-[11px]';
 </script>
 
-<div class="overflow-x-auto rounded-2xl border border-line bg-surface">
+<!-- svelte-ignore a11y_no_noninteractive_tabindex -- keyboard users need focus to scroll the table -->
+<div class="overflow-x-auto rounded-2xl border border-line bg-surface" role="region" aria-label={label} tabindex="0">
 	<table class="w-full min-w-[560px] border-collapse text-left text-sm">
 		<caption class="sr-only">{label}</caption>
 		<thead>
