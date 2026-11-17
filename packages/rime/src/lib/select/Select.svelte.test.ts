@@ -255,12 +255,17 @@ test('a select, a menu and a date picker on one page close each other and keep u
 });
 
 test('with transition, a click during the leave cannot select again', async () => {
+	const style = document.head.appendChild(document.createElement('style'));
+	style.textContent = '.fade { transition: opacity 500ms linear; } .fade[data-closed] { opacity: 0; }';
 	const onchange = vi.fn();
-	await renderField({ transition: true, onchange });
+	await renderField({ transition: true, onchange, classes: { popup: 'fade' } });
 	await field().click();
+	const popup = document.querySelector<HTMLElement>('[popover]')!;
+	await expect.poll(() => popup.hasAttribute('data-enter'), { timeout: 2500 }).toBe(false);
 	await option('India').click();
-	(option('Japan').query() as HTMLElement | null)?.click();
+	(option('Japan').element() as HTMLElement).click();
 	expect(onchange).toHaveBeenCalledExactlyOnceWith('in');
+	style.remove();
 });
 
 test('a custom trigger on a non-labelable element opens without errors', async () => {

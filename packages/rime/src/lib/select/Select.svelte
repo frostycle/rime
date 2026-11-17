@@ -69,6 +69,7 @@
 	}
 
 	function select(entry: T): void {
+		if (!popover.open) return;
 		popover.close('commit');
 		if (entry.value === value) return;
 		value = entry.value;
