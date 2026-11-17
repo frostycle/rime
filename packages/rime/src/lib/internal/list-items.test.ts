@@ -1,11 +1,19 @@
 import { expect, test } from 'vitest';
-import { entryOffsets, firstEnabled, flattenItems, lastEnabled, matchTypeahead, stepEnabled } from './menu-items.js';
-import type { MenuEntry, MenuItem } from './types.js';
+import {
+	entryOffsets,
+	firstEnabled,
+	flattenItems,
+	lastEnabled,
+	matchTypeahead,
+	moveEnabled,
+	stepEnabled
+} from './list-items.js';
+import type { ListEntry, ListItem } from './list-items.js';
 
-const items: MenuItem[] = [{ label: 'Edit' }, { label: 'Export', disabled: true }, { label: 'Email' }, { label: 'Archive' }];
+const items: ListItem[] = [{ label: 'Edit' }, { label: 'Export', disabled: true }, { label: 'Email' }, { label: 'Archive' }];
 
 test('flattenItems skips separators and opens groups in order', () => {
-	const entries: MenuEntry<MenuItem>[] = [
+	const entries: ListEntry<ListItem>[] = [
 		{ label: 'A' },
 		{ type: 'separator' },
 		{ type: 'group', label: 'G', items: [{ label: 'B' }] },
@@ -56,11 +64,29 @@ test('typeahead finds a match when nothing is focused', () => {
 
 test('entryOffsets gives the flat index where each entry starts', () => {
 	const repeated = { label: 'A' };
-	const entries: MenuEntry<MenuItem>[] = [
+	const entries: ListEntry<ListItem>[] = [
 		repeated,
 		{ type: 'separator' },
 		{ type: 'group', label: 'G', items: [{ label: 'B' }, { label: 'C' }] },
 		repeated
 	];
 	expect(entryOffsets(entries)).toEqual([0, 1, 1, 3]);
+});
+
+test('moveEnabled stops at the ends instead of wrapping', () => {
+	expect(moveEnabled(items, 3, 1)).toBe(3);
+	expect(moveEnabled(items, 0, -1)).toBe(0);
+	expect(moveEnabled(items, 0, 1)).toBe(2);
+	expect(moveEnabled(items, -1, 1)).toBe(0);
+});
+
+test('moveEnabled moves a page of enabled items, clamping at the ends', () => {
+	const many = Array.from({ length: 15 }, (_, i) => ({ label: `O${i}`, disabled: i === 5 }));
+	expect(moveEnabled(many, 0, 10)).toBe(11);
+	expect(moveEnabled(many, 11, 10)).toBe(14);
+	expect(moveEnabled(many, 14, -10)).toBe(3);
+});
+
+test('moveEnabled returns -1 when nothing is enabled', () => {
+	expect(moveEnabled([{ label: 'A', disabled: true }], -1, 1)).toBe(-1);
 });
