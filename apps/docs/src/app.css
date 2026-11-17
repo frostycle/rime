@@ -1,3 +1,63 @@
 @import 'tailwindcss';
 
 @custom-variant dark (&:where([data-theme='dark'], [data-theme='dark'] *));
+
+:root {
+	color-scheme: light dark;
+	--page: light-dark(#f9fafc, #0e1016);
+	--surface: light-dark(#ffffff, #181b23);
+	--text: light-dark(#181b23, #f2f4f8);
+	--text2: light-dark(#565d6d, #b4bac6);
+	--border: light-dark(#e3e6ed, #262b36);
+	--accent: light-dark(#3a56d4, #7c9bff);
+	--on-accent: light-dark(#ffffff, #0f1636);
+	--accent-soft: light-dark(#e1e8fd, rgba(124, 155, 255, 0.16));
+	--accent-text: light-dark(#2f45ad, #9db2f7);
+	--code: light-dark(#f2f4f8, #262b36);
+	--hover: light-dark(rgba(24, 27, 35, 0.07), rgba(255, 255, 255, 0.1));
+	--hairline: light-dark(rgba(24, 27, 35, 0.1), rgba(255, 255, 255, 0.13));
+	--disabled: light-dark(#6b7280, #9aa1b0);
+	--desk: linear-gradient(
+		140deg,
+		light-dark(#a9c6ee, #15213f) 0%,
+		light-dark(#c5c6f2, #262650) 50%,
+		light-dark(#e6d5ee, #3a2547) 100%
+	);
+	--glass: light-dark(rgba(255, 255, 255, 0.72), rgba(38, 43, 54, 0.72));
+	--glass-border: light-dark(rgba(255, 255, 255, 0.85), rgba(255, 255, 255, 0.13));
+	/* light-dark() takes colours only, so each theme's shadow is its own layer, transparent in the other theme. */
+	--glass-shadow:
+		0 8px 28px light-dark(rgba(15, 22, 54, 0.16), transparent),
+		0 10px 30px light-dark(transparent, rgba(0, 0, 0, 0.5)),
+		inset 0 1px 0 light-dark(rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.14));
+}
+
+/* Without data-theme (no JavaScript), color-scheme: light dark lets light-dark() follow the system. */
+[data-theme='light'] {
+	color-scheme: light;
+}
+
+[data-theme='dark'] {
+	color-scheme: dark;
+}
+
+@theme inline {
+	--color-page: var(--page);
+	--color-surface: var(--surface);
+	--color-fg: var(--text);
+	--color-fg-muted: var(--text2);
+	--color-line: var(--border);
+	--color-accent: var(--accent);
+	--color-on-accent: var(--on-accent);
+	--color-accent-soft: var(--accent-soft);
+	--color-accent-fg: var(--accent-text);
+	--color-code: var(--code);
+	--color-hover: var(--hover);
+	--color-hairline: var(--hairline);
+	--color-disabled: var(--disabled);
+}
+
+body {
+	background: var(--page);
+	color: var(--text);
+}

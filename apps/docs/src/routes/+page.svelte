@@ -1,199 +1,103 @@
 <script lang="ts">
-	import { page } from '$app/state';
-	import { DropdownMenu, type MenuClasses, type MenuEntry } from '@frostycle/rime/dropdown-menu';
-	import { Select, type SelectClasses, type SelectEntry } from '@frostycle/rime/select';
-	import {
-		addDays,
-		DatePicker,
-		DateRangePicker,
-		isIsoDate,
-		today,
-		type DateRange,
-		type PickerClasses
-	} from '@frostycle/rime/date-picker';
+	import CodeBlock from '#lib/components/CodeBlock.svelte';
+	import DateRangeField from '#lib/demos/DateRangeField.svelte';
+	import type { DateRange } from '@frostycle/rime/date-picker';
 
-	let theme = $state<'light' | 'dark'>('light');
-	let report = $state<DateRange | null>(null);
-	let due = $state<string | null>(null);
-	let custom = $state<string | null>(null);
-	let lastAction = $state<string | null>(null);
-	let country = $state<string | null>(null);
+	let period = $state<DateRange | null>({ start: '2026-11-03', end: '2026-11-12' });
 
-	const focusRing = 'outline-blue-700 dark:outline-blue-300';
-	const buttonBase = `cursor-pointer rounded-md border bg-white px-3 py-2 text-slate-900 dark:bg-slate-800 dark:text-slate-100 ${focusRing}`;
-	const button = `${buttonBase} border-slate-300 focus-visible:outline-2 focus-visible:outline-offset-2 dark:border-slate-600`;
-	const popupSurface =
-		'rounded-lg border border-slate-300 bg-white text-slate-900 shadow-lg dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100';
-	const dayStates = `size-9 cursor-pointer data-focus:outline-2 data-focus:outline-offset-2 data-today:font-bold data-today:underline data-in-range:bg-blue-100 data-range-start:bg-blue-700 data-range-start:text-white data-range-end:bg-blue-700 data-range-end:text-white data-selected:bg-blue-700 data-selected:text-white data-disabled:cursor-not-allowed data-disabled:opacity-40 dark:data-in-range:bg-blue-900 dark:data-range-start:bg-blue-300 dark:data-range-start:text-slate-900 dark:data-range-end:bg-blue-300 dark:data-range-end:text-slate-900 dark:data-selected:bg-blue-300 dark:data-selected:text-slate-900 ${focusRing}`;
-	const sectionTitle = 'mb-3 font-bold';
-	const note = 'mt-4 text-slate-600 dark:text-slate-300';
-
-	const classes: PickerClasses = {
-		trigger: `${buttonBase} border-slate-300 data-focus:outline-2 data-focus:outline-offset-2 dark:border-slate-600`,
-		popup: `${popupSurface} p-4`,
-		body: 'flex flex-wrap gap-6',
-		header: 'mb-2 flex items-center gap-2',
-		title: 'flex-1 text-center font-semibold',
-		nav: `cursor-pointer rounded px-2 py-1 data-focus:outline-2 data-focus:outline-offset-2 ${focusRing}`,
-		weekday: 'text-xs font-medium text-slate-600 dark:text-slate-300',
-		day: `rounded ${dayStates}`,
-		presets: 'flex flex-col gap-1',
-		preset: `cursor-pointer rounded px-2 py-1 text-start focus-visible:outline-2 focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:opacity-50 ${focusRing}`
-	};
-
-	const rangePresets = [
-		{ label: 'Today', value: () => ({ start: today(), end: today() }) },
-		{ label: 'Last 7 days', value: () => ({ start: addDays(today(), -6), end: today() }) },
-		{ label: 'Last 30 days', value: () => ({ start: addDays(today(), -29), end: today() }) }
-	];
-	const datePresets = [
-		{ label: 'Today', value: () => today() },
-		{ label: 'In a week', value: () => addDays(today(), 7) }
+	const components = [
+		{ href: '/date-pickers', name: 'Date picker', blurb: 'One date, as a timezone-safe string, with presets and form support.' },
+		{ href: '/date-pickers', name: 'Date range picker', blurb: 'Two clicks, a live preview, length limits and a multi-month view.' },
+		{ href: '/dropdown-menu', name: 'Dropdown menu', blurb: 'Actions, links and groups, with arrow keys and type-to-jump.' },
+		{ href: '/select', name: 'Select', blurb: 'One value from a list, labelled like a native field, with form support.' }
 	];
 
-	const menuClasses: MenuClasses = {
-		trigger: classes.trigger,
-		popup: `${popupSurface} min-w-48 p-1.5 outline-none transition duration-150 ease-out data-closed:-translate-y-1 data-closed:opacity-0 motion-reduce:transition-none`,
-		item: 'block w-full cursor-pointer rounded px-2.5 py-1.5 text-start outline-none data-hover:bg-blue-100 data-focus:bg-blue-700 data-focus:text-white data-disabled:cursor-not-allowed data-disabled:opacity-50 dark:data-hover:bg-blue-900 dark:data-focus:bg-blue-300 dark:data-focus:text-slate-900',
-		separator: 'mx-1 my-1.5 h-px bg-slate-300 dark:bg-slate-600',
-		groupLabel: 'px-2.5 pt-1.5 pb-1 text-xs font-semibold text-slate-600 dark:text-slate-300'
-	};
-
-	const menuItems: MenuEntry[] = [
-		{ label: 'Edit', onselect: () => (lastAction = 'Edit') },
-		{ label: 'Duplicate', onselect: () => (lastAction = 'Duplicate') },
-		{ label: 'View on GitHub', href: 'https://github.com/frostycle/rime', target: '_blank', rel: 'noreferrer' },
-		{ type: 'separator' },
+	const features = [
 		{
-			type: 'group',
-			label: 'Danger zone',
-			items: [
-				{ label: 'Archive', onselect: () => (lastAction = 'Archive') },
-				{ label: 'Delete', disabled: true }
-			]
+			title: 'Keyboard and screen readers',
+			blurb: 'Follows the WAI-ARIA patterns, and is tested with axe in real browsers.',
+			icon: 'M2.5 5.5h15v9h-15z M5.5 8.5h1M9.5 8.5h1M13.5 8.5h1M6.5 11.5h7'
+		},
+		{
+			title: 'Server rendering',
+			blurb: 'Renders on the server, so it works in SvelteKit and in plain Svelte.',
+			icon: 'M3 4.5h14v4H3z M3 11.5h14v4H3z M6 6.5h.01M6 13.5h.01'
+		},
+		{
+			title: 'Top-layer popups',
+			blurb: 'Never clipped by an overflow container, and safe inside a modal dialog.',
+			icon: 'M4 4h12v12H4z M8 8h4v4H8z'
 		}
 	];
 
-	const selectClasses: SelectClasses = {
-		trigger: `${button} min-w-48 text-start data-placeholder:text-slate-600 dark:data-placeholder:text-slate-300 data-disabled:opacity-50`,
-		popup: menuClasses.popup,
-		option:
-			'block w-full cursor-pointer rounded px-2.5 py-1.5 text-start data-highlighted:bg-blue-100 data-selected:font-semibold data-disabled:cursor-not-allowed data-disabled:opacity-50 dark:data-highlighted:bg-blue-900',
-		separator: menuClasses.separator,
-		groupLabel: menuClasses.groupLabel
-	};
-
-	const countries: SelectEntry[] = [
-		{ value: 'id', label: 'Indonesia' },
-		{ value: 'th', label: 'Thailand' },
-		{ value: 'sg', label: 'Singapore', disabled: true },
-		{ type: 'separator' },
-		{
-			type: 'group',
-			label: 'Coming soon',
-			items: [{ value: 'vn', label: 'Vietnam' }]
-		}
-	];
-
-	function isoParam(name: string): string | null {
-		const param = page.url.searchParams.get(name);
-		return isIsoDate(param) ? param : null;
-	}
-
-	const filterStart = $derived(isoParam('from'));
-	const filterEnd = $derived(isoParam('to'));
-	const filter = $derived(
-		filterStart && filterEnd && filterStart <= filterEnd
-			? { start: filterStart, end: filterEnd }
-			: null
-	);
+	const stateSample = `<DatePicker
+	classes={{
+		day: 'size-9 rounded-md data-selected:bg-blue-600 data-today:font-bold data-disabled:opacity-40'
+	}}
+/>`;
 </script>
 
 <svelte:head>
-	<title>Rime playground</title>
+	<title>Rime: headless UI for Svelte 5</title>
 </svelte:head>
 
-<main
-	data-theme={theme}
-	class="min-h-screen bg-slate-50 px-4 py-8 text-slate-900 dark:bg-slate-900 dark:text-slate-100"
->
-	<div class="mx-auto max-w-3xl space-y-8">
-		<header class="flex items-center justify-between gap-4">
-			<h1 class="text-2xl font-bold">@frostycle/rime</h1>
-			<button
-				type="button"
-				class={button}
-				onclick={() => (theme = theme === 'light' ? 'dark' : 'light')}
+<section class="grid items-center gap-16 [grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr))]">
+	<div>
+		<p class="text-sm font-semibold text-accent-fg">One component. Your styles.</p>
+		<h1 class="mt-4 text-4xl font-bold tracking-tight md:text-5xl">Headless, snippet-based UI primitives for Svelte 5.</h1>
+		<p class="mt-6 max-w-2xl text-lg leading-relaxed text-fg-muted">
+			Rime handles keyboard, focus, positioning and accessibility. You restyle it with snippets and data attributes,
+			with no tree of nested parts to compose.
+		</p>
+		<div class="mt-8 flex flex-wrap items-center gap-3">
+			<a
+				class="rounded-lg bg-accent px-4.5 py-3 text-[15px] font-semibold text-on-accent no-underline"
+				href="/date-pickers">Browse components</a
 			>
-				{theme === 'light' ? 'Dark' : 'Light'} theme
-			</button>
-		</header>
-
-		<section>
-			<h2 class={sectionTitle}>Filter bar in an overflow hidden container</h2>
-			<form
-				method="GET"
-				class="flex gap-2 overflow-hidden rounded-lg border border-slate-300 bg-white p-3 dark:border-slate-600 dark:bg-slate-800"
-			>
-				<DateRangePicker value={filter} startName="from" endName="to" {classes} />
-				<button type="submit" class={button}>Apply</button>
-			</form>
-			<p class={note}>Applied: <output>{filter ? `${filter.start} to ${filter.end}` : 'none'}</output></p>
-		</section>
-
-		<section>
-			<h2 class={sectionTitle}>Report range, two months with presets</h2>
-			<DateRangePicker bind:value={report} months={2} presets={rangePresets} {classes} />
-			<p class={note}>Value: <output>{report ? `${report.start} to ${report.end}` : 'none'}</output></p>
-		</section>
-
-		<section>
-			<h2 class={sectionTitle}>Single date in a form</h2>
-			<form method="GET" class="flex gap-2">
-				<DatePicker bind:value={due} name="due" presets={datePresets} {classes} />
-				<button type="reset" class={button}>Reset</button>
-			</form>
-			<p class={note}>Value: <output>{due ?? 'none'}</output></p>
-		</section>
-
-		<section>
-			<h2 class={sectionTitle}>Customised with snippets</h2>
-			<DatePicker bind:value={custom} {classes}>
-				{#snippet trigger({ props, label, clear, value })}
-					<button
-						{...props}
-						class="{buttonBase} mr-2 border-blue-700 focus-visible:outline-2 focus-visible:outline-offset-2 dark:border-blue-300"
-					>
-						{label || 'Pick a day'}
-					</button>
-					{#if value}<button type="button" class={button} onclick={clear}>Clear</button>{/if}
-				{/snippet}
-				{#snippet day({ props, dayNumber, isToday })}
-					<button {...props} class="rounded-full {dayStates}">
-						{dayNumber}{#if isToday}<span aria-hidden="true">•</span>{/if}
-					</button>
-				{/snippet}
-			</DatePicker>
-		</section>
-
-		<section>
-			<h2 class={sectionTitle}>Dropdown menu</h2>
-			<DropdownMenu items={menuItems} label="Actions" transition classes={menuClasses} />
-			<p class={note}>Last action: <output>{lastAction ?? 'none'}</output></p>
-		</section>
-
-		<section>
-			<h2 class={sectionTitle}>Select</h2>
-			<label for="country" class="mb-1 block">Country</label>
-			<Select
-				id="country"
-				items={countries}
-				bind:value={country}
-				placeholder="Choose a country"
-				transition
-				classes={selectClasses}
-			/>
-			<p class={note}>Value: <output>{country ?? 'none'}</output></p>
-		</section>
+			<code class="rounded-lg border border-line bg-surface px-3.5 py-3 font-mono text-[13px]">pnpm add @frostycle/rime</code>
+		</div>
 	</div>
-</main>
+	<div class="min-w-0 rounded-2xl bg-(image:--desk) px-5 py-9 sm:px-8">
+		<div class="min-h-[380px]"><DateRangeField bind:value={period} /></div>
+	</div>
+</section>
+
+<section class="mt-24" aria-labelledby="components">
+	<h2 id="components" class="text-3xl font-bold tracking-tight">Components</h2>
+	<div class="mt-8 grid gap-6 [grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr))]">
+		{#each components as { href, name, blurb } (name)}
+			<a class="block rounded-2xl border border-line bg-surface p-7 no-underline" {href}>
+				<span class="flex items-center gap-2 text-[17px] font-semibold">
+					{name}
+				</span>
+				<p class="m-0 mt-2 text-sm leading-normal text-fg-muted">{blurb}</p>
+			</a>
+		{/each}
+	</div>
+</section>
+
+<section class="mt-24 grid items-center gap-12 [grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr))]" aria-labelledby="state">
+	<div>
+		<h2 id="state" class="text-3xl font-bold tracking-tight">Style state, not structure.</h2>
+		<p class="mt-4 max-w-prose text-[17px] leading-relaxed text-fg-muted">
+			Every interactive element exposes its state as a data attribute, so Tailwind variants or plain CSS can target it
+			directly. The library ships no colours and needs no theme prop.
+		</p>
+	</div>
+	<div class="min-w-0"><CodeBlock code={stateSample} label="Styling by state" /></div>
+</section>
+
+<section class="mt-24" aria-labelledby="built-in">
+	<h2 id="built-in" class="text-3xl font-bold tracking-tight">Built in, on every component</h2>
+	<ul class="mt-8 grid list-none gap-6 p-0 [grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr))]">
+		{#each features as { title, blurb, icon } (title)}
+			<li class="rounded-2xl border border-line bg-surface p-7">
+				<div class="flex size-10 items-center justify-center rounded-xl bg-accent-soft text-accent-fg">
+					<svg viewBox="0 0 20 20" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d={icon} /></svg>
+				</div>
+				<h3 class="mt-4 text-base font-semibold">{title}</h3>
+				<p class="mt-2 text-sm leading-normal text-fg-muted">{blurb}</p>
+			</li>
+		{/each}
+	</ul>
+</section>
