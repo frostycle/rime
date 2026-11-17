@@ -2,9 +2,12 @@ import { expect, test } from '@playwright/test';
 import { ROUTES } from '../src/lib/site.ts';
 import { runAxe } from './axe.ts';
 
+const THEMES = ['light', 'dark'] as const;
+const PAGE_BACKGROUND = { light: 'rgb(249, 250, 252)', dark: 'rgb(14, 16, 22)' };
+
 for (const route of ROUTES) {
-	test(`${route} has one h1, landmarks, a skip link and passes axe in both themes`, async ({ page }) => {
-		for (const theme of ['light', 'dark']) {
+	for (const theme of THEMES) {
+		test(`${route} has one h1, landmarks, a skip link and passes axe in the ${theme} theme`, async ({ page }) => {
 			await page.addInitScript((t) => localStorage.setItem('rime-theme', t), theme);
 			await page.goto(route);
 			await expect(page.locator('html')).toHaveAttribute('data-theme', theme);
@@ -13,8 +16,8 @@ for (const route of ROUTES) {
 			await expect(page.getByRole('link', { name: 'Skip to content' })).toBeAttached();
 			const { violations } = await runAxe(page);
 			expect(violations).toEqual([]);
-		}
-	});
+		});
+	}
 
 	test(`${route} does not scroll sideways`, async ({ page }) => {
 		await page.goto(route);
@@ -66,3 +69,29 @@ test('an unknown URL shows a 404 page with a link home', async ({ page }) => {
 	expect(response?.status()).toBe(404);
 	await expect(page.getByRole('link', { name: /home/i })).toHaveAttribute('href', '/');
 });
+
+for (const theme of THEMES) {
+	const system = theme === 'light' ? 'dark' : 'light';
+	test(`a stored ${theme} theme wins over a ${system} system`, async ({ page }) => {
+		await page.emulateMedia({ colorScheme: system });
+		await page.addInitScript((t) => localStorage.setItem('rime-theme', t), theme);
+		await page.goto('/installation');
+		await expect(page.locator('body')).toHaveCSS('background-color', PAGE_BACKGROUND[theme]);
+	});
+
+	test(`the 404 page passes axe in the ${theme} theme`, async ({ page }) => {
+		await page.addInitScript((t) => localStorage.setItem('rime-theme', t), theme);
+		await page.goto('/no-such-page');
+		await expect(page.locator('html')).toHaveAttribute('data-theme', theme);
+		const { violations } = await runAxe(page);
+		expect(violations).toEqual([]);
+	});
+
+	test(`without JavaScript, a ${theme} system gets the ${theme} theme`, async ({ browser }) => {
+		const context = await browser.newContext({ javaScriptEnabled: false, colorScheme: theme });
+		const page = await context.newPage();
+		await page.goto('/installation');
+		await expect(page.locator('body')).toHaveCSS('background-color', PAGE_BACKGROUND[theme]);
+		await context.close();
+	});
+}
