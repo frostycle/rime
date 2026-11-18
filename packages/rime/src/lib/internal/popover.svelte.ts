@@ -69,6 +69,9 @@ export class Popover {
 			// leave transition, so outside clicks are handled in #onDocumentPointerDown instead.
 			popover: 'manual',
 			role: this.#role,
+			// A click on content that cannot take focus (and any button click in Safari) focuses the
+			// nearest focusable ancestor; without this that is outside the popup, and it closes.
+			tabindex: -1,
 			'data-open': this.open ? '' : undefined,
 			onfocusout: this.#onFocusOut,
 			[this.#contentKey]: this.#attachContent

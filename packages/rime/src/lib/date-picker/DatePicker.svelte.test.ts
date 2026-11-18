@@ -4,6 +4,7 @@ import { render } from 'vitest-browser-svelte';
 import DatePicker from './DatePicker.svelte';
 import AllSnippetsFixture from './fixtures/AllSnippetsFixture.svelte';
 import CustomPresetsFixture from './fixtures/CustomPresetsFixture.svelte';
+import FocusableAncestorFixture from './fixtures/FocusableAncestorFixture.svelte';
 import ModalDialogFixture from './fixtures/ModalDialogFixture.svelte';
 import TwoPickersFixture from './fixtures/TwoPickersFixture.svelte';
 
@@ -147,6 +148,15 @@ test('inside a modal dialog, the popup is on top and Escape closes only the popu
 	await userEvent.keyboard('{Escape}');
 	await expect.element(page.getByRole('grid')).not.toBeInTheDocument();
 	await expect.element(page.getByTestId('modal')).toBeVisible();
+});
+
+test('inside a focusable ancestor, clicking the popup does not close it', async () => {
+	await render(FocusableAncestorFixture);
+	await page.getByRole('button', { name: 'Oct 15, 2026' }).click();
+	await page.getByText('October 2026').click();
+	await expect.element(page.getByRole('dialog')).toBeVisible();
+	await page.getByRole('button', { name: 'Next month' }).click();
+	await expect.element(page.getByText('November 2026')).toBeVisible();
 });
 
 test('disabling an open picker closes the popup', async () => {
