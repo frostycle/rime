@@ -410,15 +410,16 @@ for (const [setting, paneStyle] of [
 	['a scrolling pane', ''],
 	['a transformed ancestor', 'transform: translateX(40px)']
 ]) {
-	test(`after a blocked submit in ${setting}, the validated select sits on the trigger`, async () => {
+	test(`after a blocked submit in ${setting}, the validated select covers the trigger`, async () => {
 		await render(ScrollPaneSelectFixture, { required: true, paneStyle });
 		form().requestSubmit();
 		await expect.element(field()).toHaveFocus();
 		const trigger = field().element().getBoundingClientRect();
 		const anchor = validatedSelect().getBoundingClientRect();
 		expect(anchor.left).toBeCloseTo(trigger.left, 0);
-		expect(anchor.top).toBeGreaterThanOrEqual(trigger.top);
-		expect(anchor.bottom).toBeLessThanOrEqual(trigger.bottom + 0.5);
+		expect(anchor.top).toBeCloseTo(trigger.top, 0);
+		expect(anchor.width).toBeCloseTo(trigger.width, 0);
+		expect(anchor.height).toBeCloseTo(trigger.height, 0);
 		const pane = page.getByTestId('pane').element().getBoundingClientRect();
 		expect(trigger.bottom).toBeLessThanOrEqual(pane.bottom + 0.5);
 	});

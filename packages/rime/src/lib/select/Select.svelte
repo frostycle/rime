@@ -164,10 +164,10 @@
 
 	// A label click would otherwise reach the button and open the list, unlike a native <select>.
 	// Listening on the document covers labels rendered after the trigger.
-	// The browser focuses the first invalid control on a blocked submit and anchors its message to
-	// it. Moving the control onto the trigger only then keeps it fixed (no page scroll) the rest of
-	// the time; measuring after placement corrects for an ancestor that a transform makes the
-	// containing block.
+	// The browser focuses the first invalid control on a blocked submit and places its message by
+	// that control's box. Covering the trigger only then keeps the control fixed and 1px (no page
+	// scroll) the rest of the time; measuring after placement corrects for an ancestor that a
+	// transform makes the containing block.
 	function onValidatedSelectFocus(event: FocusEvent): void {
 		const trigger = popover.triggerElement;
 		if (!trigger) return;
@@ -180,7 +180,9 @@
 		control.style.top = '0px';
 		const origin = control.getBoundingClientRect();
 		control.style.left = `${goal.left - origin.left}px`;
-		control.style.top = `${goal.bottom - 1 - origin.top}px`;
+		control.style.top = `${goal.top - origin.top}px`;
+		control.style.width = `${goal.width}px`;
+		control.style.height = `${goal.height}px`;
 	}
 
 	function attachLabels(element: HTMLElement) {
