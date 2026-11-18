@@ -4,15 +4,20 @@ import {
 	lastEnabled,
 	matchTypeahead,
 	moveEnabled
-} from '../internal/list-items.js';
-import { createPointerMoveFilter } from '../internal/pointer.js';
-import type { SelectOption } from './types.js';
+} from './list-items.js';
+import type { ListOption } from './list-types.js';
+import { createPointerMoveFilter } from './pointer.js';
 
 const TYPEAHEAD_RESET_MS = 500;
 const PAGE_SIZE = 10;
 
-export class Listbox<T extends SelectOption> {
+export function optionId(prefix: string, index: number): string {
+	return `${prefix}-option-${index}`;
+}
+
+export class Listbox<T extends ListOption> {
 	#items: () => T[];
+	#textInput: boolean;
 	#highlightedValue: string | null = null;
 	#typed = '';
 	#typedTimer: ReturnType<typeof setTimeout> | undefined;
@@ -20,8 +25,9 @@ export class Listbox<T extends SelectOption> {
 
 	highlighted = $state(-1);
 
-	constructor(items: () => T[]) {
+	constructor(items: () => T[], options: { textInput?: boolean } = {}) {
 		this.#items = items;
+		this.#textInput = options.textInput ?? false;
 	}
 
 	highlightOnOpen(value: string | null): void {
@@ -38,6 +44,10 @@ export class Listbox<T extends SelectOption> {
 		this.#highlight(lastEnabled(this.#items()));
 	}
 
+	clearHighlight(): void {
+		this.#highlight(-1);
+	}
+
 	highlightMatch(character: string): void {
 		this.#typeahead(character, -1);
 	}
@@ -49,6 +59,7 @@ export class Listbox<T extends SelectOption> {
 			this.#highlight(moveEnabled(this.#items(), this.highlighted, step));
 			return true;
 		}
+		if (this.#textInput) return false;
 		switch (event.key) {
 			case 'Home':
 				event.preventDefault();

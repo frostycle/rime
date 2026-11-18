@@ -3,14 +3,9 @@
 	import { createAttachmentKey } from 'svelte/attachments';
 	import { Popover } from '../internal/popover.svelte.js';
 	import { watchFormReset } from '../internal/form-reset.js';
-	import {
-		entryOffsets,
-		flattenItems,
-		isGroup,
-		isSeparator,
-		isTypeaheadKey
-	} from '../internal/list-items.js';
-	import { Listbox } from './listbox.svelte.js';
+	import { flattenItems, isTypeaheadKey } from '../internal/list-items.js';
+	import ListboxEntries from '../internal/ListboxEntries.svelte';
+	import { Listbox, optionId } from '../internal/listbox.svelte.js';
 	import type { SelectElementProps, SelectOption, SelectProps } from './types.js';
 
 	const LABELS_KEY = createAttachmentKey();
@@ -39,7 +34,6 @@
 	const triggerId = $derived(triggerIdProp ?? `${id}-trigger`);
 
 	const flatItems = $derived(flattenItems(items));
-	const offsets = $derived(entryOffsets(items));
 	const selected = $derived(flatItems.find((entry) => entry.value === value) ?? null);
 
 	const listbox = new Listbox<T>(() => flatItems);
@@ -57,22 +51,6 @@
 		failedValidation && required && !disabled && (value === null || value === '')
 	);
 	let listboxLabel = $state<string>();
-
-	function optionId(index: number): string {
-		return `${id}-option-${index}`;
-	}
-
-	function optionProps(entry: T, index: number, isSelected: boolean): SelectElementProps {
-		return {
-			...listbox.optionProps(entry, index, optionId(index), select),
-			'aria-selected': isSelected,
-			'data-selected': isSelected ? '' : undefined
-		};
-	}
-
-	function groupLabelId(position: number): string {
-		return `${id}-group-${position}`;
-	}
 
 	function select(entry: T): void {
 		if (!popover.open) return;
@@ -227,7 +205,7 @@
 	$effect(() => {
 		const index = listbox.highlighted;
 		if (!popover.mounted || index === -1) return;
-		document.getElementById(optionId(index))?.scrollIntoView({ block: 'nearest' });
+		document.getElementById(optionId(id, index))?.scrollIntoView({ block: 'nearest' });
 	});
 
 	const valueAtMount = untrack(() => value);
@@ -253,7 +231,7 @@
 		role: 'combobox',
 		disabled,
 		'aria-activedescendant':
-			popover.open && listbox.highlighted !== -1 ? optionId(listbox.highlighted) : undefined,
+			popover.open && listbox.highlighted !== -1 ? optionId(id, listbox.highlighted) : undefined,
 		'aria-required': required ? 'true' : undefined,
 		'aria-invalid': showInvalid ? 'true' : undefined,
 		'data-invalid': showInvalid ? '' : undefined,
@@ -273,45 +251,18 @@
 	});
 </script>
 
-{#snippet listOption(entry: T, index: number)}
-	{@const isSelected = entry.value === value}
-	{@const props = optionProps(entry, index, isSelected)}
-	{#if optionSnippet}
-		{@render optionSnippet({
-			option: entry,
-			props,
-			selected: isSelected,
-			highlighted: listbox.highlighted === index,
-			disabled: entry.disabled ?? false
-		})}
-	{:else}
-		<div {...props} class={classes.option}>{entry.label}</div>
-	{/if}
-{/snippet}
-
 {#snippet body()}
-	{#each items as entry, position (position)}
-		{#if isSeparator(entry)}
-			{#if separator}
-				{@render separator({ props: { role: 'none' } })}
-			{:else}
-				<div role="none" class={classes.separator}></div>
-			{/if}
-		{:else if isGroup(entry)}
-			<div role="group" aria-labelledby={groupLabelId(position)} class={classes.group}>
-				{#if groupLabel}
-					{@render groupLabel({ label: entry.label, props: { id: groupLabelId(position) } })}
-				{:else}
-					<div id={groupLabelId(position)} class={classes.groupLabel}>{entry.label}</div>
-				{/if}
-				{#each entry.items as groupOption, groupPosition (groupPosition)}
-					{@render listOption(groupOption, offsets[position] + groupPosition)}
-				{/each}
-			</div>
-		{:else}
-			{@render listOption(entry, offsets[position])}
-		{/if}
-	{/each}
+	<ListboxEntries
+		{items}
+		{value}
+		{listbox}
+		idPrefix={id}
+		onselect={select}
+		{classes}
+		option={optionSnippet}
+		{separator}
+		{groupLabel}
+	/>
 {/snippet}
 
 {#if trigger}
