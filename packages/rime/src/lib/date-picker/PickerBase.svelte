@@ -242,7 +242,8 @@
 				</div>
 			{/if}
 		{/if}
-		{#each calendar.grids as monthGrid, index (monthGrid.month)}
+		<!-- Keyed by position: keyed by month, navigating destroys the arrow buttons and drops their focus. -->
+		{#each calendar.grids as monthGrid, index (index)}
 			<div class={classes.month}>
 				{#if header}
 					{@render header({
