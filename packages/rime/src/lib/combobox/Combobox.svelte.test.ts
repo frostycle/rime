@@ -2,6 +2,7 @@ import axe from 'axe-core';
 import { expect, onTestFinished, test, vi } from 'vitest';
 import { page, userEvent } from 'vitest/browser';
 import { render } from 'vitest-browser-svelte';
+import Combobox from './Combobox.svelte';
 import DialogComboboxFixture from './fixtures/DialogComboboxFixture.svelte';
 import LabelledComboboxFixture from './fixtures/LabelledComboboxFixture.svelte';
 
@@ -123,10 +124,18 @@ test('each query change highlights the first match', async () => {
 	await expectHighlighted('Asia/Jakarta');
 	await userEvent.keyboard('{ArrowDown}');
 	await expectHighlighted('Asia/Jayapura');
-	await userEvent.keyboard('y');
-	await expect.element(query()).toHaveTextContent('ay');
-	await expectHighlighted('Asia/Jayapura');
-	expect(option('Asia/Jayapura').element().id).toMatch(/-option-0$/);
+	await userEvent.keyboard('s');
+	await expect.element(query()).toHaveTextContent('as');
+	await expectHighlighted('Asia/Jakarta');
+});
+
+test('a query change highlights the first option before the caller refilters', async () => {
+	await render(Combobox, { items: all });
+	await page.getByRole('combobox').click();
+	await userEvent.keyboard('a{ArrowDown}');
+	await expect.element(option('Asia/Jayapura')).toHaveAttribute('data-highlighted');
+	await userEvent.keyboard('s');
+	await expect.element(option('Asia/Jakarta')).toHaveAttribute('data-highlighted');
 });
 
 const bangkok = { value: 'Asia/Bangkok', label: 'Asia/Bangkok' };
@@ -147,6 +156,27 @@ test('items arriving late keep a highlight the user moved', async () => {
 	await expectHighlighted('Asia/Jakarta');
 	await second.rerender({ all: [bangkok, ...all] });
 	await expectHighlighted('Asia/Bangkok');
+});
+
+test('typing again forgets a highlight the user moved', async () => {
+	const { rerender } = await renderField();
+	await field().click();
+	await userEvent.keyboard('asi{ArrowDown}a');
+	await expectHighlighted('Asia/Jakarta');
+	await rerender({ all: [bangkok, ...all] });
+	await expectHighlighted('Asia/Bangkok');
+});
+
+test('a highlight moved by hovering survives late items', async () => {
+	const { rerender } = await renderField();
+	await field().click();
+	await userEvent.keyboard('asia');
+	await expectHighlighted('Asia/Jakarta');
+	await option('Asia/Jayapura').hover();
+	await expectHighlighted('Asia/Jayapura');
+	await rerender({ all: [bangkok, ...all] });
+	await expect.element(option('Asia/Bangkok')).toBeVisible();
+	await expectHighlighted('Asia/Jayapura');
 });
 
 test('Enter picks the highlighted option', async () => {
