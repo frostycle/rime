@@ -8,6 +8,7 @@ import FormSelectFixture from './fixtures/FormSelectFixture.svelte';
 import LabelledSelectFixture from './fixtures/LabelledSelectFixture.svelte';
 import LateLabelFixture from './fixtures/LateLabelFixture.svelte';
 import ModalSelectFixture from './fixtures/ModalSelectFixture.svelte';
+import RequiredCustomTriggerFixture from './fixtures/RequiredCustomTriggerFixture.svelte';
 import SelectMenuPickerFixture from './fixtures/SelectMenuPickerFixture.svelte';
 import type { SelectEntry } from './types.js';
 
@@ -315,6 +316,51 @@ test('a blocked submit focuses the trigger, not the hidden select', async () => 
 	form().requestSubmit();
 	await expect.element(field()).toHaveFocus();
 	expect(onsubmit).not.toHaveBeenCalled();
+});
+
+test('the invalid state appears only after validation fails', async () => {
+	await render(FormSelectFixture, { required: true });
+	await expect.element(field()).not.toHaveAttribute('data-invalid');
+	await expect.element(field()).not.toHaveAttribute('aria-invalid');
+	form().checkValidity();
+	await expect.element(field()).toHaveAttribute('data-invalid');
+	await expect.element(field()).toHaveAttribute('aria-invalid', 'true');
+});
+
+test('picking a value clears the invalid state', async () => {
+	await render(FormSelectFixture, { required: true });
+	form().checkValidity();
+	await field().click();
+	await option('Japan').click();
+	await expect.element(field()).not.toHaveAttribute('data-invalid');
+	await expect.element(field()).not.toHaveAttribute('aria-invalid');
+});
+
+test('form reset clears the invalid state', async () => {
+	await render(FormSelectFixture, { required: true });
+	form().checkValidity();
+	await expect.element(field()).toHaveAttribute('data-invalid');
+	await page.getByRole('button', { name: 'Reset' }).click();
+	await expect.element(field()).not.toHaveAttribute('data-invalid');
+	await expect.element(field()).not.toHaveAttribute('aria-invalid');
+});
+
+test('the invalid state reaches a custom trigger', async () => {
+	await render(RequiredCustomTriggerFixture);
+	form().checkValidity();
+	const trigger = page.getByTestId('div-trigger');
+	await expect.element(trigger).toHaveAttribute('aria-required', 'true');
+	await expect.element(trigger).toHaveAttribute('aria-invalid', 'true');
+	await expect.element(trigger).toHaveAttribute('data-invalid');
+});
+
+test('turning required off clears the invalid state and restores the hidden input', async () => {
+	const { rerender } = await render(FormSelectFixture, { required: true });
+	form().checkValidity();
+	await expect.element(field()).toHaveAttribute('data-invalid');
+	await rerender({ required: false });
+	await expect.element(field()).not.toHaveAttribute('data-invalid');
+	expect(document.querySelector('input[type="hidden"][name="country"]')).toHaveProperty('value', '');
 });
 
 test('a required select has no axe violations, closed or open', async () => {
