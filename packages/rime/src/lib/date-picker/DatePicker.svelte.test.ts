@@ -159,6 +159,18 @@ test('inside a focusable ancestor, clicking the popup does not close it', async 
 	await expect.element(page.getByText('November 2026')).toBeVisible();
 });
 
+test('a month arrow keeps keyboard focus after navigating, so it can be pressed again', async () => {
+	await render(DatePicker, { value: '2026-10-15' });
+	await page.getByRole('button', { name: 'Oct 15, 2026' }).click();
+	const nextMonth = page.getByRole('button', { name: 'Next month' });
+	(nextMonth.element() as HTMLElement).focus();
+	await userEvent.keyboard('{Enter}');
+	await expect.element(page.getByText('November 2026')).toBeVisible();
+	await expect.element(nextMonth).toHaveFocus();
+	await userEvent.keyboard('{Enter}');
+	await expect.element(page.getByText('December 2026')).toBeVisible();
+});
+
 test('disabling an open picker closes the popup', async () => {
 	const onchange = vi.fn();
 	const { rerender } = await render(DatePicker, { value: '2026-10-15', onchange });
