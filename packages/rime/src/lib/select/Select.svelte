@@ -302,6 +302,7 @@
 			required
 			tabindex="-1"
 			aria-hidden="true"
+			onfocus={() => popover.triggerElement?.focus()}
 			style="position: absolute; opacity: 0; pointer-events: none; width: 1px; height: 1px; margin: 0"
 		>
 			<!-- WebKit does not revalidate when an option's value changes in place, so it is recreated. -->

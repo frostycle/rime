@@ -308,6 +308,15 @@ test('required marks the trigger aria-required', async () => {
 	await expect.element(field()).not.toHaveAttribute('aria-required');
 });
 
+test('a blocked submit focuses the trigger, not the hidden select', async () => {
+	await render(FormSelectFixture, { required: true });
+	const onsubmit = vi.fn((event: SubmitEvent) => event.preventDefault());
+	form().addEventListener('submit', onsubmit);
+	form().requestSubmit();
+	await expect.element(field()).toHaveFocus();
+	expect(onsubmit).not.toHaveBeenCalled();
+});
+
 test('a required select has no axe violations, closed or open', async () => {
 	await render(FormSelectFixture, { required: true });
 	expect((await axe.run(document.body, axeOptions)).violations).toEqual([]);
