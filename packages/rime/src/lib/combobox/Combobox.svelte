@@ -1,7 +1,8 @@
 <script lang="ts" generics="T extends ComboboxOption">
-	import { untrack } from 'svelte';
-	import { isComposing } from '../internal/interaction.js';
-	import { flattenItems } from '../internal/list-items.js';
+	import { flushSync, untrack } from 'svelte';
+	import { watchFormReset } from '../internal/form-reset.js';
+	import { interactionProps, isComposing } from '../internal/interaction.js';
+	import { flattenItems, withoutEmptyGroups } from '../internal/list-items.js';
 	import ListboxEntries from '../internal/ListboxEntries.svelte';
 	import { Listbox, optionId } from '../internal/listbox.svelte.js';
 	import { Popover, type CloseReason } from '../internal/popover.svelte.js';
@@ -24,6 +25,7 @@
 		option: optionSnippet,
 		separator,
 		groupLabel,
+		button,
 		empty
 	}: ComboboxProps<T> = $props();
 
@@ -32,6 +34,12 @@
 
 	const flatItems = $derived(flattenItems(items));
 	const selected = $derived(flatItems.find((entry) => entry.value === value) ?? null);
+	const shownItems = $derived(withoutEmptyGroups(items));
+
+	const knownLabels = new Map<string, string>();
+	const selectedLabel = $derived(
+		selected?.label ?? (value === null ? undefined : knownLabels.get(value)) ?? ''
+	);
 
 	const listbox = new Listbox<T>(() => flatItems, { textInput: true });
 
@@ -44,8 +52,9 @@
 	let editing = $state(false);
 	let movedByUser = false;
 	let listboxLabel = $state<string>();
+	let formElement = $state<HTMLInputElement>();
 
-	const inputText = $derived(editing ? query : (selected?.label ?? ''));
+	const inputText = $derived(editing ? query : selectedLabel);
 	const hasContent = $derived(flatItems.length > 0 || empty !== undefined);
 
 	function onClose(reason: CloseReason): void {
@@ -63,7 +72,16 @@
 		popover.close('commit');
 		if (next === value) return;
 		value = next;
+		announceToForm();
 		onchange?.(next);
+	}
+
+	// A native <select> fires these on a user pick, and form-level listeners depend on them.
+	// The flush puts the new value in the hidden input first.
+	function announceToForm(): void {
+		flushSync();
+		formElement?.dispatchEvent(new Event('input', { bubbles: true }));
+		formElement?.dispatchEvent(new Event('change', { bubbles: true }));
 	}
 
 	function select(entry: T): void {
@@ -146,6 +164,19 @@
 		else endEditing();
 	}
 
+	function toggleFromButton(): void {
+		if (popover.open) {
+			popover.close('outside');
+			return;
+		}
+		popover.triggerElement?.focus();
+		if (!editing) openFromKeyboard();
+		else if (hasContent) {
+			popover.show();
+			highlightForQuery();
+		}
+	}
+
 	function onPopupPointerMove(event: PointerEvent): void {
 		const hovered = (event.target as Element).closest('[role="option"]');
 		if (hovered && hovered.id === optionId(id, listbox.highlighted)) movedByUser = true;
@@ -181,6 +212,27 @@
 	});
 
 	$effect(() => {
+		if (selected) knownLabels.set(selected.value, selected.label);
+	});
+
+	const valueAtMount = untrack(() => value);
+
+	$effect(() => {
+		const element = popover.triggerElement;
+		if (!element) return;
+		// The reset event comes before the browser restores the input's default text, so a state
+		// change made now would be overwritten; wait for the restore, then write the text back.
+		return watchFormReset(element, () => {
+			setTimeout(() => {
+				endEditing();
+				value = valueAtMount;
+				flushSync();
+				(element as HTMLInputElement).value = inputText;
+			});
+		});
+	});
+
+	$effect(() => {
 		if (disabled) untrack(() => popover.close('outside'));
 	});
 
@@ -199,7 +251,21 @@
 		'data-disabled': disabled ? '' : undefined,
 		oninput: onInput,
 		onkeydown: onKeydown,
-		onblur: onBlur
+		onblur: onBlur,
+		...interactionProps
+	});
+
+	const buttonProps = $derived<ComboboxElementProps>({
+		...popover.partProps,
+		...interactionProps,
+		type: 'button',
+		tabindex: -1,
+		'aria-hidden': 'true',
+		disabled,
+		'data-open': popover.open ? '' : undefined,
+		'data-disabled': disabled ? '' : undefined,
+		onmousedown: (event: MouseEvent) => event.preventDefault(),
+		onclick: toggleFromButton
 	});
 
 	const popupProps = $derived<ComboboxElementProps>({
@@ -212,8 +278,11 @@
 </script>
 
 {#snippet body()}
+	{#if flatItems.length === 0 && empty}
+		{@render empty({ query })}
+	{/if}
 	<ListboxEntries
-		{items}
+		items={shownItems}
 		{value}
 		{listbox}
 		idPrefix={id}
@@ -231,8 +300,12 @@
 	<input {...inputProps} class={classes.input} />
 {/if}
 
+{#if button}
+	{@render button({ props: buttonProps, open: popover.open })}
+{/if}
+
 {#if name && !disabled}
-	<input type="hidden" {name} value={value ?? ''} />
+	<input bind:this={formElement} type="hidden" {name} value={value ?? ''} />
 {/if}
 
 {#if popover.mounted}

@@ -3,7 +3,9 @@ import { expect, onTestFinished, test, vi } from 'vitest';
 import { page, userEvent } from 'vitest/browser';
 import { render } from 'vitest-browser-svelte';
 import Combobox from './Combobox.svelte';
+import AllSnippetsComboboxFixture from './fixtures/AllSnippetsComboboxFixture.svelte';
 import DialogComboboxFixture from './fixtures/DialogComboboxFixture.svelte';
+import FormComboboxFixture from './fixtures/FormComboboxFixture.svelte';
 import LabelledComboboxFixture from './fixtures/LabelledComboboxFixture.svelte';
 
 const field = () => page.getByRole('combobox', { name: 'Timezone' });
@@ -325,4 +327,168 @@ test('a value set from outside while editing does not overwrite the typed text',
 	await expect.element(field()).toHaveValue('jak');
 	await userEvent.keyboard('{Escape}');
 	await expect.element(field()).toHaveValue('Europe/Paris');
+});
+
+const emptyMessage = (typed: string) => `No timezone matches “${typed}”.`;
+const renderAllSnippets = (props = {}) => render(AllSnippetsComboboxFixture, { all, ...props });
+const renderFormField = (props = {}) => render(FormComboboxFixture, { all, ...props });
+const formData = () => Object.fromEntries(new FormData(document.querySelector('form')!));
+
+test('the empty snippet shows when nothing matches', async () => {
+	await renderAllSnippets();
+	await field().fill('zzz');
+	await expect.element(listbox()).toContainElement(page.getByText(emptyMessage('zzz')).element());
+	await expect.element(page.getByText(emptyMessage('zzz'))).toBeVisible();
+	await expect.element(field()).not.toHaveAttribute('aria-activedescendant');
+});
+
+test('without an empty snippet the list closes when nothing matches and returns with options', async () => {
+	await renderField();
+	await field().fill('zzz');
+	await expect.element(listbox()).not.toBeInTheDocument();
+	await userEvent.keyboard('{Backspace}{Backspace}{Backspace}');
+	await userEvent.keyboard('a');
+	await expect.element(listbox()).toBeVisible();
+});
+
+test('the button toggles the list and keeps focus in the input', async () => {
+	await renderAllSnippets();
+	const button = page.getByRole('button', { includeHidden: true });
+	await expect.element(button).toHaveAttribute('tabindex', '-1');
+	await expect.element(button).toHaveAttribute('aria-hidden', 'true');
+	await button.click();
+	await expect.element(listbox()).toBeVisible();
+	await expect.element(button).toHaveAttribute('data-open');
+	await expect.element(field()).toHaveFocus();
+	await button.click();
+	await expect.element(listbox()).not.toBeInTheDocument();
+	await expect.element(field()).toHaveFocus();
+});
+
+test('custom input and option snippets receive working props', async () => {
+	const onchange = vi.fn();
+	await renderAllSnippets({ onchange });
+	await field().fill('jak');
+	expect(inputElement().hasAttribute('data-custom-input')).toBe(true);
+	await expect.element(page.getByRole('option')).toHaveLength(1);
+	expect(document.querySelector('[data-custom-option]')).not.toBeNull();
+	await option('Asia/Jakarta').click();
+	expect(onchange).toHaveBeenCalledExactlyOnceWith('Asia/Jakarta');
+	await expect.element(field()).toHaveValue('Asia/Jakarta');
+});
+
+test('disabled disables the input, closes the list and drops the hidden input', async () => {
+	const { rerender } = await renderFormField({ value: 'Asia/Jakarta' });
+	await field().fill('jak');
+	await expect.element(listbox()).toBeVisible();
+	await rerender({ disabled: true });
+	await expect.element(listbox()).not.toBeInTheDocument();
+	await expect.element(field()).toBeDisabled();
+	await expect.element(field()).toHaveAttribute('data-disabled');
+	expect(formData()).toEqual({});
+});
+
+test('state attributes', async () => {
+	const withDisabled = [...all, { value: 'Pacific/Fiji', label: 'Pacific/Fiji', disabled: true }];
+	await renderField({ all: withDisabled, value: 'Asia/Jayapura' });
+	await expect.element(field()).not.toHaveAttribute('data-open');
+	await expect.element(field()).not.toHaveAttribute('data-focus');
+	await field().click();
+	await expect.element(field()).toHaveAttribute('data-focus');
+	await userEvent.keyboard('{ArrowDown}');
+	await expect.element(field()).toHaveAttribute('data-open');
+	await expect.element(option('Asia/Jayapura')).toHaveAttribute('data-selected');
+	await expect.element(option('Asia/Jayapura')).toHaveAttribute('data-highlighted');
+	await expect.element(option('Asia/Jakarta')).not.toHaveAttribute('data-selected');
+	await expect.element(option('Pacific/Fiji')).toHaveAttribute('data-disabled');
+});
+
+test('name submits the value, never the typed text', async () => {
+	await renderFormField();
+	await field().fill('jak');
+	await option('Asia/Jakarta').click();
+	expect(formData()).toEqual({ timezone: 'Asia/Jakarta' });
+	await field().fill('xyz');
+	expect(formData()).toEqual({ timezone: 'Asia/Jakarta' });
+});
+
+function recordFormEvents(): string[] {
+	const seen: string[] = [];
+	const form = document.querySelector('form')!;
+	for (const type of ['input', 'change']) {
+		form.addEventListener(type, (event) => {
+			const target = event.target as HTMLInputElement;
+			if (target.name) seen.push(`${type} ${target.name}=${target.value}`);
+		});
+	}
+	return seen;
+}
+
+test('a pick or a clear fires input then change from the hidden input', async () => {
+	await renderFormField();
+	const seen = recordFormEvents();
+	await field().fill('jak');
+	expect(seen).toEqual([]);
+	await option('Asia/Jakarta').click();
+	expect(seen).toEqual(['input timezone=Asia/Jakarta', 'change timezone=Asia/Jakarta']);
+	seen.length = 0;
+	await emptyTheInput();
+	await userEvent.tab();
+	expect(seen).toEqual(['input timezone=', 'change timezone=']);
+});
+
+test('form reset restores the mounted value and clears query', async () => {
+	await renderFormField({ value: 'Europe/Paris' });
+	await field().fill('jak');
+	await option('Asia/Jakarta').click();
+	await field().fill('ja');
+	await page.getByRole('button', { name: 'Reset' }).click();
+	await expect.element(status()).toHaveTextContent('Europe/Paris');
+	await expect.element(field()).toHaveValue('Europe/Paris');
+	await expect.poll(() => query().element().textContent).toBe('');
+});
+
+test('the label of a value whose option arrives later shows once it appears', async () => {
+	const { rerender } = await renderField({ value: 'Asia/Jakarta', all: [] });
+	await expect.element(field()).toHaveValue('');
+	await rerender({ all: [all[0]] });
+	await expect.element(field()).toHaveValue('Asia/Jakarta');
+});
+
+test("a group the caller's filter emptied is not rendered", async () => {
+	await render(Combobox, {
+		items: [
+			{ type: 'group', label: 'Asia', items: [] },
+			{ type: 'group', label: 'Europe', items: [all[2]] }
+		],
+		id: 'timezone'
+	});
+	await page.getByRole('combobox').fill('par');
+	await expect.element(page.getByRole('group', { name: 'Europe' })).toBeVisible();
+	await expect.element(page.getByRole('group', { name: 'Asia' })).not.toBeInTheDocument();
+});
+
+test('transition keeps the popup mounted through its leave', async () => {
+	const style = document.head.appendChild(document.createElement('style'));
+	style.textContent = '.fade { transition: opacity 500ms linear; } .fade[data-closed] { opacity: 0; }';
+	onTestFinished(() => style.remove());
+	await renderField({ transition: true, classes: { popup: 'fade' } });
+	await field().fill('jak');
+	const popup = document.querySelector<HTMLElement>('[popover]')!;
+	await expect.poll(() => popup.hasAttribute('data-enter'), { timeout: 2500 }).toBe(false);
+	await userEvent.keyboard('{Escape}');
+	expect(popup.hasAttribute('data-closed')).toBe(true);
+	expect(popup.hasAttribute('data-leave')).toBe(true);
+	await expect.poll(() => popup.isConnected, { timeout: 2500 }).toBe(false);
+});
+
+test("the label stays when the caller's filter removes the selected option", async () => {
+	const { rerender } = await renderField();
+	await field().fill('jak');
+	await option('Asia/Jakarta').click();
+	await rerender({ all: [all[2]] });
+	await expect.element(field()).toHaveValue('Asia/Jakarta');
+	await field().fill('par');
+	await userEvent.keyboard('{Escape}');
+	await expect.element(field()).toHaveValue('Asia/Jakarta');
 });
