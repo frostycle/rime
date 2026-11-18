@@ -32,6 +32,8 @@ export class Popover {
 	#placement: () => Placement;
 	#triggerKey = createAttachmentKey();
 	#contentKey = createAttachmentKey();
+	#partKey = createAttachmentKey();
+	#partElements = new Set<HTMLElement>();
 	#triggerElement: HTMLElement | null = null;
 	#contentElement: HTMLElement | null = null;
 	#openAtPointerDown: boolean | null = null;
@@ -50,16 +52,26 @@ export class Popover {
 
 	get triggerProps(): Record<string | symbol, unknown> {
 		return {
+			...this.anchorProps,
 			type: 'button',
 			'aria-haspopup': this.#role,
+			onpointerdown: this.#onTriggerPointerDown,
+			onclick: this.#onTriggerClick,
+			...interactionProps
+		};
+	}
+
+	get anchorProps(): Record<string | symbol, unknown> {
+		return {
 			'aria-expanded': this.open,
 			'aria-controls': this.open ? this.#id : undefined,
 			'data-open': this.open ? '' : undefined,
-			onpointerdown: this.#onTriggerPointerDown,
-			onclick: this.#onTriggerClick,
-			[this.#triggerKey]: this.#attachTrigger,
-			...interactionProps
+			[this.#triggerKey]: this.#attachTrigger
 		};
+	}
+
+	get partProps(): Record<string | symbol, unknown> {
+		return { [this.#partKey]: this.#attachPart };
 	}
 
 	get contentProps(): Record<string | symbol, unknown> {
@@ -102,6 +114,13 @@ export class Popover {
 		this.#triggerElement = element;
 		return () => {
 			this.#triggerElement = null;
+		};
+	};
+
+	#attachPart = (element: HTMLElement) => {
+		this.#partElements.add(element);
+		return () => {
+			this.#partElements.delete(element);
 		};
 	};
 
@@ -195,6 +214,7 @@ export class Popover {
 		const target = event.target;
 		if (!(target instanceof Node)) return;
 		if (this.#contentElement?.contains(target) || this.#triggerElement?.contains(target)) return;
+		if ([...this.#partElements].some((part) => part.contains(target))) return;
 		this.close('outside');
 	};
 
