@@ -50,6 +50,7 @@ export type SelectProps<T extends SelectOption = SelectOption> = {
 	placeholder?: string;
 	placement?: Placement;
 	disabled?: boolean;
+	required?: boolean;
 	transition?: boolean;
 	classes?: SelectClasses;
 	trigger?: Snippet<[SelectTriggerSnippetArgs<T>]>;

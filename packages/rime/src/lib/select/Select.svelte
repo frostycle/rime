@@ -25,6 +25,7 @@
 		placeholder,
 		placement = 'bottom-start',
 		disabled = false,
+		required = false,
 		transition = false,
 		classes = {},
 		trigger,
@@ -50,7 +51,7 @@
 	});
 
 	let highlightOnShow: (() => void) | null = null;
-	let hiddenInput = $state<HTMLInputElement>();
+	let formElement = $state<HTMLInputElement | HTMLSelectElement>();
 	let listboxLabel = $state<string>();
 
 	function optionId(index: number): string {
@@ -82,8 +83,8 @@
 	// form fields, dirty tracking) depend on them. The flush puts the new value in the input first.
 	function announceToForm(): void {
 		flushSync();
-		hiddenInput?.dispatchEvent(new Event('input', { bubbles: true }));
-		hiddenInput?.dispatchEvent(new Event('change', { bubbles: true }));
+		formElement?.dispatchEvent(new Event('input', { bubbles: true }));
+		formElement?.dispatchEvent(new Event('change', { bubbles: true }));
 	}
 
 	function selectHighlighted(): void {
@@ -227,6 +228,7 @@
 		disabled,
 		'aria-activedescendant':
 			popover.open && listbox.highlighted !== -1 ? optionId(listbox.highlighted) : undefined,
+		'aria-required': required ? 'true' : undefined,
 		'data-disabled': disabled ? '' : undefined,
 		'data-placeholder': value === null ? '' : undefined,
 		onkeydown: onTriggerKeydown,
@@ -290,8 +292,26 @@
 	<button {...triggerProps} class={classes.trigger}>{selected?.label ?? placeholder ?? ''}</button>
 {/if}
 
-{#if name && !disabled}
-	<input bind:this={hiddenInput} type="hidden" {name} value={value ?? ''} />
+{#if !disabled}
+	{#if required}
+		<!-- Hidden inputs are never validated, so required needs a real control. A select whose only
+		     option is empty reports valueMissing with the browser's select wording. -->
+		<select
+			bind:this={formElement}
+			{name}
+			required
+			tabindex="-1"
+			aria-hidden="true"
+			style="position: absolute; opacity: 0; pointer-events: none; width: 1px; height: 1px; margin: 0"
+		>
+			<!-- WebKit does not revalidate when an option's value changes in place, so it is recreated. -->
+			{#key value}
+				<option value={value ?? ''}></option>
+			{/key}
+		</select>
+	{:else if name}
+		<input bind:this={formElement} type="hidden" {name} value={value ?? ''} />
+	{/if}
 {/if}
 
 {#if popover.mounted}

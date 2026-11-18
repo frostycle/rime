@@ -244,9 +244,75 @@ test('re-picking the current option, a reset or an outside change fires no form 
 
 test('a disabled select submits nothing, like a disabled native select', async () => {
 	const { rerender } = await render(FormSelectFixture, { value: 'id', disabled: true });
-	expect(Object.fromEntries(new FormData(document.querySelector('form')!))).toEqual({});
+	expect(formData()).toEqual({});
 	await rerender({ disabled: false });
-	expect(Object.fromEntries(new FormData(document.querySelector('form')!))).toEqual({ country: 'id' });
+	expect(formData()).toEqual({ country: 'id' });
+});
+
+const form = () => document.querySelector('form')!;
+const formData = () => Object.fromEntries(new FormData(form()));
+
+test('required blocks submit while nothing is chosen', async () => {
+	await render(FormSelectFixture, { required: true });
+	expect(form().checkValidity()).toBe(false);
+});
+
+test('required passes once an option is picked, and submits the same data', async () => {
+	await render(FormSelectFixture, { required: true });
+	await field().click();
+	await option('Japan').click();
+	expect(form().checkValidity()).toBe(true);
+	expect(formData()).toEqual({ country: 'jp' });
+});
+
+test('required treats an empty-string value as missing', async () => {
+	await render(FormSelectFixture, { required: true, value: '' });
+	expect(form().checkValidity()).toBe(false);
+});
+
+test('required treats a value with no matching option as chosen', async () => {
+	await render(FormSelectFixture, { required: true, value: 'zz' });
+	expect(form().checkValidity()).toBe(true);
+});
+
+test('picking an option whose value is empty stays invalid', async () => {
+	await render(FormSelectFixture, {
+		required: true,
+		value: 'jp',
+		items: [
+			{ value: '', label: 'None' },
+			{ value: 'jp', label: 'Japan' }
+		]
+	});
+	await field().click();
+	await option('None').click();
+	expect(form().checkValidity()).toBe(false);
+});
+
+test('a disabled required select neither validates nor submits', async () => {
+	await render(FormSelectFixture, { required: true, disabled: true });
+	expect(form().checkValidity()).toBe(true);
+	expect(formData()).toEqual({});
+});
+
+test('required without name still validates and submits nothing', async () => {
+	await render(FormSelectFixture, { required: true, name: undefined });
+	expect(form().checkValidity()).toBe(false);
+	expect(formData()).toEqual({});
+});
+
+test('required marks the trigger aria-required', async () => {
+	const { rerender } = await render(FormSelectFixture, { required: true });
+	await expect.element(field()).toHaveAttribute('aria-required', 'true');
+	await rerender({ required: false });
+	await expect.element(field()).not.toHaveAttribute('aria-required');
+});
+
+test('a required select has no axe violations, closed or open', async () => {
+	await render(FormSelectFixture, { required: true });
+	expect((await axe.run(document.body, axeOptions)).violations).toEqual([]);
+	await field().click();
+	expect((await axe.run(document.body, axeOptions)).violations).toEqual([]);
 });
 
 test('a value with no matching option shows the placeholder and is kept', async () => {
