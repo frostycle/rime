@@ -204,7 +204,8 @@ export class Popover {
 
 	// Handled at keydown so the reason is known; preventDefault keeps a surrounding <dialog> open.
 	#onDocumentKeydown = (event: KeyboardEvent) => {
-		if (event.key !== 'Escape' || openPopovers.at(-1) !== this) return;
+		// An Escape during IME composition cancels the composition, not the popup.
+		if (event.key !== 'Escape' || event.isComposing || openPopovers.at(-1) !== this) return;
 		event.preventDefault();
 		event.stopImmediatePropagation();
 		this.close('escape');
