@@ -40,7 +40,7 @@ export const select: ComponentReference<SelectProps> = {
 			type: 'boolean',
 			default: 'false',
 			notes:
-				"Blocks form submit while nothing is chosen, with the browser's own message. Adds aria-required, and aria-invalid with data-invalid after a failed submit."
+				"Blocks form submit while nothing is chosen, with the browser's own message. Adds aria-required, and aria-invalid with data-invalid once a validity check fails: a blocked submit, or a checkValidity() or reportValidity() call."
 		},
 		transition: {
 			type: 'boolean',
