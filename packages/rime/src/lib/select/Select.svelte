@@ -164,6 +164,25 @@
 
 	// A label click would otherwise reach the button and open the list, unlike a native <select>.
 	// Listening on the document covers labels rendered after the trigger.
+	// The browser focuses the first invalid control on a blocked submit and anchors its message to
+	// it. Moving the control onto the trigger only then keeps it fixed (no page scroll) the rest of
+	// the time; measuring after placement corrects for an ancestor that a transform makes the
+	// containing block.
+	function onValidatedSelectFocus(event: FocusEvent): void {
+		const trigger = popover.triggerElement;
+		if (!trigger) return;
+		trigger.focus();
+		// WebKit does not scroll a control focused from inside another control's focus handler.
+		trigger.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+		const control = event.currentTarget as HTMLElement;
+		const goal = trigger.getBoundingClientRect();
+		control.style.left = '0px';
+		control.style.top = '0px';
+		const origin = control.getBoundingClientRect();
+		control.style.left = `${goal.left - origin.left}px`;
+		control.style.top = `${goal.bottom - 1 - origin.top}px`;
+	}
+
 	function attachLabels(element: HTMLElement) {
 		const onClick = (event: MouseEvent) => {
 			const label = event.target instanceof Element ? event.target.closest('label') : null;
@@ -309,9 +328,9 @@
 			required
 			tabindex="-1"
 			aria-hidden="true"
-			onfocus={() => popover.triggerElement?.focus()}
+			onfocus={onValidatedSelectFocus}
 			oninvalid={() => (failedValidation = true)}
-			style="position: absolute; opacity: 0; pointer-events: none; width: 1px; height: 1px; margin: 0"
+			style="position: fixed; top: 0; left: 0; opacity: 0; pointer-events: none; width: 1px; height: 1px; margin: 0; border: 0; padding: 0; appearance: none"
 		>
 			<!-- WebKit does not revalidate when an option's value changes in place, so it is recreated. -->
 			{#key value}

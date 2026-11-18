@@ -8,6 +8,7 @@ import FormSelectFixture from './fixtures/FormSelectFixture.svelte';
 import LabelledSelectFixture from './fixtures/LabelledSelectFixture.svelte';
 import LateLabelFixture from './fixtures/LateLabelFixture.svelte';
 import ModalSelectFixture from './fixtures/ModalSelectFixture.svelte';
+import ScrollPaneSelectFixture from './fixtures/ScrollPaneSelectFixture.svelte';
 import RequiredCustomTriggerFixture from './fixtures/RequiredCustomTriggerFixture.svelte';
 import SelectMenuPickerFixture from './fixtures/SelectMenuPickerFixture.svelte';
 import type { SelectEntry } from './types.js';
@@ -395,6 +396,33 @@ test('disabling after a failed submit clears the invalid state', async () => {
 	await expect.element(field()).not.toHaveAttribute('data-invalid');
 	await expect.element(field()).not.toHaveAttribute('aria-invalid');
 });
+
+const validatedSelect = () => document.querySelector<HTMLSelectElement>('select[name="country"]')!;
+
+test('required inside a scrolling pane adds no page scroll', async () => {
+	const { rerender } = await render(ScrollPaneSelectFixture);
+	const withoutRequired = document.documentElement.scrollHeight;
+	await rerender({ required: true });
+	expect(document.documentElement.scrollHeight).toBe(withoutRequired);
+});
+
+for (const [setting, paneStyle] of [
+	['a scrolling pane', ''],
+	['a transformed ancestor', 'transform: translateX(40px)']
+]) {
+	test(`after a blocked submit in ${setting}, the validated select sits on the trigger`, async () => {
+		await render(ScrollPaneSelectFixture, { required: true, paneStyle });
+		form().requestSubmit();
+		await expect.element(field()).toHaveFocus();
+		const trigger = field().element().getBoundingClientRect();
+		const anchor = validatedSelect().getBoundingClientRect();
+		expect(anchor.left).toBeCloseTo(trigger.left, 0);
+		expect(anchor.top).toBeGreaterThanOrEqual(trigger.top);
+		expect(anchor.bottom).toBeLessThanOrEqual(trigger.bottom + 0.5);
+		const pane = page.getByTestId('pane').element().getBoundingClientRect();
+		expect(trigger.bottom).toBeLessThanOrEqual(pane.bottom + 0.5);
+	});
+}
 
 test('a required select has no axe violations, closed or open', async () => {
 	await render(FormSelectFixture, { required: true });
