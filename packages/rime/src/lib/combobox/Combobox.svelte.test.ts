@@ -334,12 +334,19 @@ const renderAllSnippets = (props = {}) => render(AllSnippetsComboboxFixture, { a
 const renderFormField = (props = {}) => render(FormComboboxFixture, { all, ...props });
 const formData = () => Object.fromEntries(new FormData(document.querySelector('form')!));
 
-test('the empty snippet shows when nothing matches', async () => {
+const emptyPopup = () => page.elementLocator(document.querySelector<HTMLElement>('[data-custom-popup]')!);
+
+test('the empty snippet shows as a status in a popup that is not a listbox', async () => {
 	await renderAllSnippets();
 	await field().fill('zzz');
-	await expect.element(listbox()).toContainElement(page.getByText(emptyMessage('zzz')).element());
-	await expect.element(page.getByText(emptyMessage('zzz'))).toBeVisible();
+	await expect.element(emptyPopup().getByRole('status')).toHaveTextContent(emptyMessage('zzz'));
+	await expect.element(listbox()).not.toBeInTheDocument();
+	await expect.element(option('Asia/Jakarta')).not.toBeInTheDocument();
 	await expect.element(field()).not.toHaveAttribute('aria-activedescendant');
+	await expect.element(field()).toHaveAttribute('aria-controls', emptyPopup().element().id);
+	await userEvent.keyboard('{Backspace}{Backspace}{Backspace}');
+	await expect.element(page.getByRole('listbox', { name: 'Timezone' })).toBeVisible();
+	await expect.element(page.getByText(emptyMessage('zzz'))).not.toBeInTheDocument();
 });
 
 test('without an empty snippet the list closes when nothing matches and returns with options', async () => {

@@ -267,6 +267,7 @@
 
 	const popupProps = $derived<ComboboxElementProps>({
 		...popover.contentProps,
+		role: flatItems.length > 0 ? 'listbox' : undefined,
 		'aria-label': listboxLabel,
 		class: classes.popup,
 		onmousedown: (event: MouseEvent) => event.preventDefault(),
@@ -276,7 +277,7 @@
 
 {#snippet body()}
 	{#if flatItems.length === 0 && empty}
-		<div role="option" aria-selected="false" aria-disabled="true">{@render empty({ query })}</div>
+		<div role="status">{@render empty({ query })}</div>
 	{/if}
 	<ListboxEntries
 		items={shownItems}
