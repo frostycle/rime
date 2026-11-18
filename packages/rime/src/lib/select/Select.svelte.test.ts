@@ -232,6 +232,14 @@ test('picking a new option fires input then change on the form, like a native se
 	expect(seen).toEqual(['input country=jp', 'change country=jp']);
 });
 
+test('a required select fires input then change from its validated select', async () => {
+	await render(FormSelectFixture, { value: 'id', required: true });
+	const seen = recordFormEvents();
+	await field().click();
+	await option('Japan').click();
+	expect(seen).toEqual(['input country=jp', 'change country=jp']);
+});
+
 test('re-picking the current option, a reset or an outside change fires no form event', async () => {
 	const { rerender } = await render(FormSelectFixture, { value: 'id' });
 	const seen = recordFormEvents();
