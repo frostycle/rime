@@ -8,6 +8,8 @@ import FormSelectFixture from './fixtures/FormSelectFixture.svelte';
 import LabelledSelectFixture from './fixtures/LabelledSelectFixture.svelte';
 import LateLabelFixture from './fixtures/LateLabelFixture.svelte';
 import ModalSelectFixture from './fixtures/ModalSelectFixture.svelte';
+import ScrollPaneSelectFixture from './fixtures/ScrollPaneSelectFixture.svelte';
+import RequiredCustomTriggerFixture from './fixtures/RequiredCustomTriggerFixture.svelte';
 import SelectMenuPickerFixture from './fixtures/SelectMenuPickerFixture.svelte';
 import type { SelectEntry } from './types.js';
 
@@ -230,6 +232,14 @@ test('picking a new option fires input then change on the form, like a native se
 	expect(seen).toEqual(['input country=jp', 'change country=jp']);
 });
 
+test('a required select fires input then change from its validated select', async () => {
+	await render(FormSelectFixture, { value: 'id', required: true });
+	const seen = recordFormEvents();
+	await field().click();
+	await option('Japan').click();
+	expect(seen).toEqual(['input country=jp', 'change country=jp']);
+});
+
 test('re-picking the current option, a reset or an outside change fires no form event', async () => {
 	const { rerender } = await render(FormSelectFixture, { value: 'id' });
 	const seen = recordFormEvents();
@@ -244,9 +254,190 @@ test('re-picking the current option, a reset or an outside change fires no form 
 
 test('a disabled select submits nothing, like a disabled native select', async () => {
 	const { rerender } = await render(FormSelectFixture, { value: 'id', disabled: true });
-	expect(Object.fromEntries(new FormData(document.querySelector('form')!))).toEqual({});
+	expect(formData()).toEqual({});
 	await rerender({ disabled: false });
-	expect(Object.fromEntries(new FormData(document.querySelector('form')!))).toEqual({ country: 'id' });
+	expect(formData()).toEqual({ country: 'id' });
+});
+
+const form = () => document.querySelector('form')!;
+const formData = () => Object.fromEntries(new FormData(form()));
+
+test('required blocks submit while nothing is chosen', async () => {
+	await render(FormSelectFixture, { required: true });
+	expect(form().checkValidity()).toBe(false);
+});
+
+test('required passes once an option is picked, and submits the same data', async () => {
+	await render(FormSelectFixture, { required: true });
+	await field().click();
+	await option('Japan').click();
+	expect(form().checkValidity()).toBe(true);
+	expect(formData()).toEqual({ country: 'jp' });
+});
+
+test('required treats an empty-string value as missing', async () => {
+	await render(FormSelectFixture, { required: true, value: '' });
+	expect(form().checkValidity()).toBe(false);
+});
+
+test('required treats a value with no matching option as chosen', async () => {
+	await render(FormSelectFixture, { required: true, value: 'zz' });
+	expect(form().checkValidity()).toBe(true);
+});
+
+test('picking an option whose value is empty stays invalid', async () => {
+	await render(FormSelectFixture, {
+		required: true,
+		value: 'jp',
+		items: [
+			{ value: '', label: 'None' },
+			{ value: 'jp', label: 'Japan' }
+		]
+	});
+	await field().click();
+	await option('None').click();
+	expect(form().checkValidity()).toBe(false);
+});
+
+test('a disabled required select neither validates nor submits', async () => {
+	await render(FormSelectFixture, { required: true, disabled: true });
+	expect(form().checkValidity()).toBe(true);
+	expect(formData()).toEqual({});
+});
+
+test('required without name still validates and submits nothing', async () => {
+	await render(FormSelectFixture, { required: true, name: undefined });
+	expect(form().checkValidity()).toBe(false);
+	expect(formData()).toEqual({});
+});
+
+test('required marks the trigger aria-required', async () => {
+	const { rerender } = await render(FormSelectFixture, { required: true });
+	await expect.element(field()).toHaveAttribute('aria-required', 'true');
+	await rerender({ required: false });
+	await expect.element(field()).not.toHaveAttribute('aria-required');
+});
+
+test('a blocked submit focuses the trigger, not the hidden select', async () => {
+	await render(FormSelectFixture, { required: true });
+	const onsubmit = vi.fn((event: SubmitEvent) => event.preventDefault());
+	form().addEventListener('submit', onsubmit);
+	form().requestSubmit();
+	await expect.element(field()).toHaveFocus();
+	expect(onsubmit).not.toHaveBeenCalled();
+});
+
+test('the invalid state appears only after validation fails', async () => {
+	await render(FormSelectFixture, { required: true });
+	await expect.element(field()).not.toHaveAttribute('data-invalid');
+	await expect.element(field()).not.toHaveAttribute('aria-invalid');
+	form().checkValidity();
+	await expect.element(field()).toHaveAttribute('data-invalid');
+	await expect.element(field()).toHaveAttribute('aria-invalid', 'true');
+});
+
+test('picking a value clears the invalid state', async () => {
+	await render(FormSelectFixture, { required: true });
+	form().checkValidity();
+	await field().click();
+	await option('Japan').click();
+	await expect.element(field()).not.toHaveAttribute('data-invalid');
+	await expect.element(field()).not.toHaveAttribute('aria-invalid');
+});
+
+test('form reset clears the invalid state', async () => {
+	await render(FormSelectFixture, { required: true });
+	form().checkValidity();
+	await expect.element(field()).toHaveAttribute('data-invalid');
+	await page.getByRole('button', { name: 'Reset' }).click();
+	await expect.element(field()).not.toHaveAttribute('data-invalid');
+	await expect.element(field()).not.toHaveAttribute('aria-invalid');
+});
+
+test('the invalid state reaches a custom trigger', async () => {
+	await render(RequiredCustomTriggerFixture);
+	form().checkValidity();
+	const trigger = page.getByTestId('div-trigger');
+	await expect.element(trigger).toHaveAttribute('aria-required', 'true');
+	await expect.element(trigger).toHaveAttribute('aria-invalid', 'true');
+	await expect.element(trigger).toHaveAttribute('data-invalid');
+});
+
+test('turning required off clears the invalid state and restores the hidden input', async () => {
+	const { rerender } = await render(FormSelectFixture, { required: true });
+	form().checkValidity();
+	await expect.element(field()).toHaveAttribute('data-invalid');
+	await rerender({ required: false });
+	await expect.element(field()).not.toHaveAttribute('data-invalid');
+	expect(document.querySelector('input[type="hidden"][name="country"]')).toHaveProperty('value', '');
+});
+
+test('a value set from outside clears the invalid state', async () => {
+	const { rerender } = await render(FormSelectFixture, { required: true });
+	form().checkValidity();
+	await expect.element(field()).toHaveAttribute('data-invalid');
+	await rerender({ value: 'jp' });
+	await expect.element(field()).not.toHaveAttribute('data-invalid');
+	await expect.element(field()).not.toHaveAttribute('aria-invalid');
+});
+
+test('picking an empty-value option after a failed submit keeps the invalid state', async () => {
+	await render(FormSelectFixture, {
+		required: true,
+		items: [
+			{ value: '', label: 'None' },
+			{ value: 'jp', label: 'Japan' }
+		]
+	});
+	form().checkValidity();
+	await field().click();
+	await option('None').click();
+	await expect.element(field()).toHaveAttribute('data-invalid');
+	await expect.element(field()).toHaveAttribute('aria-invalid', 'true');
+});
+
+test('disabling after a failed submit clears the invalid state', async () => {
+	const { rerender } = await render(FormSelectFixture, { required: true });
+	form().checkValidity();
+	await expect.element(field()).toHaveAttribute('data-invalid');
+	await rerender({ disabled: true });
+	await expect.element(field()).not.toHaveAttribute('data-invalid');
+	await expect.element(field()).not.toHaveAttribute('aria-invalid');
+});
+
+const validatedSelect = () => document.querySelector<HTMLSelectElement>('select[name="country"]')!;
+
+test('required inside a scrolling pane adds no page scroll', async () => {
+	const { rerender } = await render(ScrollPaneSelectFixture);
+	const withoutRequired = document.documentElement.scrollHeight;
+	await rerender({ required: true });
+	expect(document.documentElement.scrollHeight).toBe(withoutRequired);
+});
+
+for (const [setting, paneStyle] of [
+	['a scrolling pane', ''],
+	['a transformed ancestor', 'transform: translateX(40px)']
+]) {
+	test(`after a blocked submit in ${setting}, the validated select covers the trigger`, async () => {
+		await render(ScrollPaneSelectFixture, { required: true, paneStyle });
+		form().requestSubmit();
+		await expect.element(field()).toHaveFocus();
+		const trigger = field().element().getBoundingClientRect();
+		const anchor = validatedSelect().getBoundingClientRect();
+		expect(anchor.left).toBeCloseTo(trigger.left, 0);
+		expect(anchor.top).toBeCloseTo(trigger.top, 0);
+		expect(anchor.width).toBeCloseTo(trigger.width, 0);
+		expect(anchor.height).toBeCloseTo(trigger.height, 0);
+		const pane = page.getByTestId('pane').element().getBoundingClientRect();
+		expect(trigger.bottom).toBeLessThanOrEqual(pane.bottom + 0.5);
+	});
+}
+
+test('a required select has no axe violations, closed or open', async () => {
+	await render(FormSelectFixture, { required: true });
+	expect((await axe.run(document.body, axeOptions)).violations).toEqual([]);
+	await field().click();
+	expect((await axe.run(document.body, axeOptions)).violations).toEqual([]);
 });
 
 test('a value with no matching option shows the placeholder and is kept', async () => {

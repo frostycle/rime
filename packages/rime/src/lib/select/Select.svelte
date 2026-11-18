@@ -25,6 +25,7 @@
 		placeholder,
 		placement = 'bottom-start',
 		disabled = false,
+		required = false,
 		transition = false,
 		classes = {},
 		trigger,
@@ -50,7 +51,11 @@
 	});
 
 	let highlightOnShow: (() => void) | null = null;
-	let hiddenInput = $state<HTMLInputElement>();
+	let formElement = $state<HTMLInputElement | HTMLSelectElement>();
+	let failedValidation = $state(false);
+	const showInvalid = $derived(
+		failedValidation && required && !disabled && (value === null || value === '')
+	);
 	let listboxLabel = $state<string>();
 
 	function optionId(index: number): string {
@@ -82,8 +87,8 @@
 	// form fields, dirty tracking) depend on them. The flush puts the new value in the input first.
 	function announceToForm(): void {
 		flushSync();
-		hiddenInput?.dispatchEvent(new Event('input', { bubbles: true }));
-		hiddenInput?.dispatchEvent(new Event('change', { bubbles: true }));
+		formElement?.dispatchEvent(new Event('input', { bubbles: true }));
+		formElement?.dispatchEvent(new Event('change', { bubbles: true }));
 	}
 
 	function selectHighlighted(): void {
@@ -159,6 +164,27 @@
 
 	// A label click would otherwise reach the button and open the list, unlike a native <select>.
 	// Listening on the document covers labels rendered after the trigger.
+	// The browser focuses the first invalid control on a blocked submit and places its message by
+	// that control's box. Covering the trigger only then keeps the control fixed and 1px (no page
+	// scroll) the rest of the time; measuring after placement corrects for an ancestor that a
+	// transform makes the containing block.
+	function onValidatedSelectFocus(event: FocusEvent): void {
+		const trigger = popover.triggerElement;
+		if (!trigger) return;
+		trigger.focus();
+		// WebKit does not scroll a control focused from inside another control's focus handler.
+		trigger.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+		const control = event.currentTarget as HTMLElement;
+		const goal = trigger.getBoundingClientRect();
+		control.style.left = '0px';
+		control.style.top = '0px';
+		const origin = control.getBoundingClientRect();
+		control.style.left = `${goal.left - origin.left}px`;
+		control.style.top = `${goal.top - origin.top}px`;
+		control.style.width = `${goal.width}px`;
+		control.style.height = `${goal.height}px`;
+	}
+
 	function attachLabels(element: HTMLElement) {
 		const onClick = (event: MouseEvent) => {
 			const label = event.target instanceof Element ? event.target.closest('label') : null;
@@ -211,6 +237,7 @@
 		if (!element) return;
 		return watchFormReset(element, () => {
 			value = valueAtMount;
+			failedValidation = false;
 		});
 	});
 
@@ -227,6 +254,9 @@
 		disabled,
 		'aria-activedescendant':
 			popover.open && listbox.highlighted !== -1 ? optionId(listbox.highlighted) : undefined,
+		'aria-required': required ? 'true' : undefined,
+		'aria-invalid': showInvalid ? 'true' : undefined,
+		'data-invalid': showInvalid ? '' : undefined,
 		'data-disabled': disabled ? '' : undefined,
 		'data-placeholder': value === null ? '' : undefined,
 		onkeydown: onTriggerKeydown,
@@ -290,8 +320,28 @@
 	<button {...triggerProps} class={classes.trigger}>{selected?.label ?? placeholder ?? ''}</button>
 {/if}
 
-{#if name && !disabled}
-	<input bind:this={hiddenInput} type="hidden" {name} value={value ?? ''} />
+{#if !disabled}
+	{#if required}
+		<!-- Hidden inputs are never validated, so required needs a real control. A select whose only
+		     option is empty reports valueMissing with the browser's select wording. -->
+		<select
+			bind:this={formElement}
+			{name}
+			required
+			tabindex="-1"
+			aria-hidden="true"
+			onfocus={onValidatedSelectFocus}
+			oninvalid={() => (failedValidation = true)}
+			style="position: fixed; top: 0; left: 0; opacity: 0; pointer-events: none; width: 1px; height: 1px; margin: 0; border: 0; padding: 0; appearance: none"
+		>
+			<!-- WebKit does not revalidate when an option's value changes in place, so it is recreated. -->
+			{#key value}
+				<option value={value ?? ''}></option>
+			{/key}
+		</select>
+	{:else if name}
+		<input bind:this={formElement} type="hidden" {name} value={value ?? ''} />
+	{/if}
 {/if}
 
 {#if popover.mounted}

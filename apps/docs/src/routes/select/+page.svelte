@@ -97,7 +97,10 @@
 	<p class={prose}>
 		With <code class={inlineCode}>name</code>, a hidden input carries the value, empty when it is
 		<code class={inlineCode}>null</code>. A form <code class={inlineCode}>reset</code> restores the value from when the
-		component mounted. <code class={inlineCode}>required</code> and browser validation are not supported yet.
+		component mounted. With <code class={inlineCode}>required</code>, the browser blocks submit while nothing is
+		chosen and focus returns to the trigger. <code class={inlineCode}>data-invalid</code> appears once a validity check
+		fails, whether a blocked submit or a <code class={inlineCode}>checkValidity()</code> call, and stays while the field
+		is empty, until a reset.
 	</p>
 </DocSection>
 
