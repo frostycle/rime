@@ -21,7 +21,6 @@ export type ComboboxEntry<T extends ComboboxOption = ComboboxOption> = ListEntry
 
 export type ComboboxClasses = {
 	input?: string;
-	button?: string;
 	popup?: string;
 	option?: string;
 	separator?: string;

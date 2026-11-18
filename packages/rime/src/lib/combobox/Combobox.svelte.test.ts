@@ -492,3 +492,26 @@ test("the label stays when the caller's filter removes the selected option", asy
 	await userEvent.keyboard('{Escape}');
 	await expect.element(field()).toHaveValue('Asia/Jakarta');
 });
+
+test('reset with nothing changed keeps the mounted label in the input', async () => {
+	await renderFormField({ value: 'Europe/Paris' });
+	await page.getByRole('button', { name: 'Reset' }).click();
+	await expect.poll(() => inputElement().value).toBe('Europe/Paris');
+	await expect.element(status()).toHaveTextContent('Europe/Paris');
+});
+
+test('a scripted form reset closes an open list', async () => {
+	await renderFormField({ value: 'Europe/Paris' });
+	await field().fill('ja');
+	await expect.element(listbox()).toBeVisible();
+	document.querySelector('form')!.reset();
+	await expect.element(listbox()).not.toBeInTheDocument();
+	await expect.element(field()).toHaveValue('Europe/Paris');
+});
+
+test('axe finds no violations with the empty message showing', async () => {
+	await renderAllSnippets();
+	await field().fill('zzz');
+	await expect.element(page.getByText(emptyMessage('zzz'))).toBeVisible();
+	expect((await axe.run(document.body, axeOptions)).violations).toEqual([]);
+});

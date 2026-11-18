@@ -220,15 +220,11 @@
 	$effect(() => {
 		const element = popover.triggerElement;
 		if (!element) return;
-		// The reset event comes before the browser restores the input's default text, so a state
-		// change made now would be overwritten; wait for the restore, then write the text back.
 		return watchFormReset(element, () => {
-			setTimeout(() => {
-				endEditing();
-				value = valueAtMount;
-				flushSync();
-				(element as HTMLInputElement).value = inputText;
-			});
+			endEditing();
+			value = valueAtMount;
+			popover.close('outside');
+			flushSync();
 		});
 	});
 
@@ -248,6 +244,7 @@
 		disabled,
 		placeholder,
 		value: inputText,
+		defaultValue: selectedLabel,
 		'data-disabled': disabled ? '' : undefined,
 		oninput: onInput,
 		onkeydown: onKeydown,
@@ -279,7 +276,7 @@
 
 {#snippet body()}
 	{#if flatItems.length === 0 && empty}
-		{@render empty({ query })}
+		<div role="option" aria-selected="false" aria-disabled="true">{@render empty({ query })}</div>
 	{/if}
 	<ListboxEntries
 		items={shownItems}
