@@ -85,8 +85,8 @@ const contains = (label, query) => plain(label).includes(plain(query));`;
 
 <DocSection id="filtering" title="Filtering">
 	<p class={prose}>
-		The component has no matching rules of its own. Each change to <code class={inlineCode}>query</code> highlights the
-		first enabled option, so Enter picks the best match. This is the case- and accent-insensitive "contains" filter the
+		The component has no matching rules of its own. Each change to <code class={inlineCode}>query</code> with text in it
+		highlights the first enabled option, so Enter picks the best match. This is the case- and accent-insensitive "contains" filter the
 		demo uses.
 	</p>
 	<div class="mt-4"><CodeBlock code={containsRecipe} label="Contains filter" /></div>
@@ -124,7 +124,7 @@ const contains = (label, query) => plain(label).includes(plain(query));`;
 	{#snippet snippetsNote()}
 		<p class={prose}>
 			While <code class={inlineCode}>empty</code> shows, the popup has no <code class={inlineCode}>listbox</code> role and
-			the message is announced through <code class={inlineCode}>role="status"</code>. Nothing is highlighted then.
+			the message is rendered in a <code class={inlineCode}>role="status"</code> element. Nothing is highlighted then.
 		</p>
 	{/snippet}
 	{#snippet keyboardNote()}

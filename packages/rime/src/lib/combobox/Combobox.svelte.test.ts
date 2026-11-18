@@ -372,6 +372,32 @@ test('the button toggles the list and keeps focus in the input', async () => {
 	await expect.element(field()).toHaveFocus();
 });
 
+test('Down reopens a list closed while editing, filtered and with the first match highlighted', async () => {
+	await renderAllSnippets();
+	await field().fill('asia');
+	await page.getByRole('button', { includeHidden: true }).click();
+	await expect.element(listbox()).not.toBeInTheDocument();
+	await userEvent.keyboard('{ArrowDown}');
+	await expect.element(listbox()).toBeVisible();
+	await expect.element(option('Asia/Jakarta')).toBeVisible();
+	await expect.element(option('Asia/Jayapura')).toBeVisible();
+	await expect.element(option('Europe/Paris')).not.toBeInTheDocument();
+	await expectHighlighted('Asia/Jakarta');
+	await expect.element(field()).toHaveValue('asia');
+});
+
+test('the toggle button reopens a list closed while editing, still filtered', async () => {
+	await renderAllSnippets();
+	await field().fill('asia');
+	const button = page.getByRole('button', { includeHidden: true });
+	await button.click();
+	await expect.element(listbox()).not.toBeInTheDocument();
+	await button.click();
+	await expect.element(option('Asia/Jakarta')).toBeVisible();
+	await expect.element(option('Europe/Paris')).not.toBeInTheDocument();
+	await expectHighlighted('Asia/Jakarta');
+});
+
 test('custom input and option snippets receive working props', async () => {
 	const onchange = vi.fn();
 	await renderAllSnippets({ onchange });

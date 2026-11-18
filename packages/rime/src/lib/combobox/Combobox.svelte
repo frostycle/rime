@@ -112,9 +112,9 @@
 	}
 
 	function openFromKeyboard(): void {
-		if (editing || !hasContent) return;
-		listbox.highlightOnOpen(value);
-		movedByUser = true;
+		if (!hasContent) return;
+		if (editing) highlightForQuery();
+		else listbox.highlightOnOpen(value);
 		popover.show();
 	}
 
@@ -170,11 +170,7 @@
 			return;
 		}
 		popover.triggerElement?.focus();
-		if (!editing) openFromKeyboard();
-		else if (hasContent) {
-			popover.show();
-			highlightForQuery();
-		}
+		openFromKeyboard();
 	}
 
 	function onPopupPointerMove(event: PointerEvent): void {
