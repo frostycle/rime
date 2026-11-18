@@ -363,6 +363,39 @@ test('turning required off clears the invalid state and restores the hidden inpu
 	expect(document.querySelector('input[type="hidden"][name="country"]')).toHaveProperty('value', '');
 });
 
+test('a value set from outside clears the invalid state', async () => {
+	const { rerender } = await render(FormSelectFixture, { required: true });
+	form().checkValidity();
+	await expect.element(field()).toHaveAttribute('data-invalid');
+	await rerender({ value: 'jp' });
+	await expect.element(field()).not.toHaveAttribute('data-invalid');
+	await expect.element(field()).not.toHaveAttribute('aria-invalid');
+});
+
+test('picking an empty-value option after a failed submit keeps the invalid state', async () => {
+	await render(FormSelectFixture, {
+		required: true,
+		items: [
+			{ value: '', label: 'None' },
+			{ value: 'jp', label: 'Japan' }
+		]
+	});
+	form().checkValidity();
+	await field().click();
+	await option('None').click();
+	await expect.element(field()).toHaveAttribute('data-invalid');
+	await expect.element(field()).toHaveAttribute('aria-invalid', 'true');
+});
+
+test('disabling after a failed submit clears the invalid state', async () => {
+	const { rerender } = await render(FormSelectFixture, { required: true });
+	form().checkValidity();
+	await expect.element(field()).toHaveAttribute('data-invalid');
+	await rerender({ disabled: true });
+	await expect.element(field()).not.toHaveAttribute('data-invalid');
+	await expect.element(field()).not.toHaveAttribute('aria-invalid');
+});
+
 test('a required select has no axe violations, closed or open', async () => {
 	await render(FormSelectFixture, { required: true });
 	expect((await axe.run(document.body, axeOptions)).violations).toEqual([]);

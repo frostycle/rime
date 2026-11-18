@@ -52,7 +52,10 @@
 
 	let highlightOnShow: (() => void) | null = null;
 	let formElement = $state<HTMLInputElement | HTMLSelectElement>();
-	let invalid = $state(false);
+	let failedValidation = $state(false);
+	const showInvalid = $derived(
+		failedValidation && required && !disabled && (value === null || value === '')
+	);
 	let listboxLabel = $state<string>();
 
 	function optionId(index: number): string {
@@ -76,7 +79,6 @@
 		popover.close('commit');
 		if (entry.value === value) return;
 		value = entry.value;
-		invalid = false;
 		announceToForm();
 		onchange?.(entry.value);
 	}
@@ -214,16 +216,12 @@
 		if (!element) return;
 		return watchFormReset(element, () => {
 			value = valueAtMount;
-			invalid = false;
+			failedValidation = false;
 		});
 	});
 
 	$effect(() => {
 		if (disabled) untrack(() => popover.close('outside'));
-	});
-
-	$effect(() => {
-		if (!required) invalid = false;
 	});
 
 	onDestroy(() => listbox.resetTypeahead());
@@ -236,8 +234,8 @@
 		'aria-activedescendant':
 			popover.open && listbox.highlighted !== -1 ? optionId(listbox.highlighted) : undefined,
 		'aria-required': required ? 'true' : undefined,
-		'aria-invalid': invalid ? 'true' : undefined,
-		'data-invalid': invalid ? '' : undefined,
+		'aria-invalid': showInvalid ? 'true' : undefined,
+		'data-invalid': showInvalid ? '' : undefined,
 		'data-disabled': disabled ? '' : undefined,
 		'data-placeholder': value === null ? '' : undefined,
 		onkeydown: onTriggerKeydown,
@@ -312,7 +310,7 @@
 			tabindex="-1"
 			aria-hidden="true"
 			onfocus={() => popover.triggerElement?.focus()}
-			oninvalid={() => (invalid = true)}
+			oninvalid={() => (failedValidation = true)}
 			style="position: absolute; opacity: 0; pointer-events: none; width: 1px; height: 1px; margin: 0"
 		>
 			<!-- WebKit does not revalidate when an option's value changes in place, so it is recreated. -->
