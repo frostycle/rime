@@ -210,6 +210,38 @@ test('name writes a hidden input, and form reset restores the mounted value', as
 	expect(hiddenInput().value).toBe('id');
 });
 
+function recordFormEvents(): string[] {
+	const seen: string[] = [];
+	const form = document.querySelector('form')!;
+	for (const type of ['input', 'change']) {
+		form.addEventListener(type, (event) => {
+			const target = event.target as HTMLInputElement;
+			seen.push(`${type} ${target.name}=${target.value}`);
+		});
+	}
+	return seen;
+}
+
+test('picking a new option fires input then change on the form, like a native select', async () => {
+	await render(FormSelectFixture, { value: 'id' });
+	const seen = recordFormEvents();
+	await field().click();
+	await option('Japan').click();
+	expect(seen).toEqual(['input country=jp', 'change country=jp']);
+});
+
+test('re-picking the current option, a reset or an outside change fires no form event', async () => {
+	const { rerender } = await render(FormSelectFixture, { value: 'id' });
+	const seen = recordFormEvents();
+	await field().click();
+	await option('Indonesia').click();
+	await rerender({ value: 'jp' });
+	await expect.element(field()).toHaveTextContent('Japan');
+	await page.getByRole('button', { name: 'Reset' }).click();
+	await expect.element(field()).toHaveTextContent('Indonesia');
+	expect(seen).toEqual([]);
+});
+
 test('a disabled select submits nothing, like a disabled native select', async () => {
 	const { rerender } = await render(FormSelectFixture, { value: 'id', disabled: true });
 	expect(Object.fromEntries(new FormData(document.querySelector('form')!))).toEqual({});
