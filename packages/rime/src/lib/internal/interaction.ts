@@ -35,4 +35,9 @@ function trackInteraction(element: HTMLElement) {
 	return () => controller.abort();
 }
 
+// Safari's composition-ending keydown has isComposing false but still keyCode 229.
+export function isComposing(event: KeyboardEvent): boolean {
+	return event.isComposing || event.keyCode === 229;
+}
+
 export const interactionProps = { [createAttachmentKey()]: trackInteraction };

@@ -1,5 +1,6 @@
 <script lang="ts" generics="T extends ComboboxOption">
 	import { untrack } from 'svelte';
+	import { isComposing } from '../internal/interaction.js';
 	import { flattenItems } from '../internal/list-items.js';
 	import ListboxEntries from '../internal/ListboxEntries.svelte';
 	import { Listbox, optionId } from '../internal/listbox.svelte.js';
@@ -113,7 +114,7 @@
 
 	// Escape while the list is open never gets here: the Popover handles it on the document first.
 	function onKeydown(event: KeyboardEvent): void {
-		if (event.isComposing) return;
+		if (isComposing(event)) return;
 		if (popover.open && listbox.navigate(event)) {
 			movedByUser = true;
 			return;

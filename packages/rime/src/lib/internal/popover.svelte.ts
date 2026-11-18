@@ -1,6 +1,6 @@
 import { autoUpdate, computePosition, flip, shift, type Placement } from '@floating-ui/dom';
 import { createAttachmentKey } from 'svelte/attachments';
-import { interactionProps } from './interaction.js';
+import { interactionProps, isComposing } from './interaction.js';
 
 export type CloseReason = 'commit' | 'escape' | 'outside' | 'focus-left';
 
@@ -205,7 +205,7 @@ export class Popover {
 	// Handled at keydown so the reason is known; preventDefault keeps a surrounding <dialog> open.
 	#onDocumentKeydown = (event: KeyboardEvent) => {
 		// An Escape during IME composition cancels the composition, not the popup.
-		if (event.key !== 'Escape' || event.isComposing || openPopovers.at(-1) !== this) return;
+		if (event.key !== 'Escape' || isComposing(event) || openPopovers.at(-1) !== this) return;
 		event.preventDefault();
 		event.stopImmediatePropagation();
 		this.close('escape');

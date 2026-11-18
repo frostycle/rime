@@ -273,6 +273,20 @@ test('IME composition is left alone', async () => {
 	await expect.element(status()).toHaveTextContent('Europe/Paris');
 });
 
+test("Safari's composition-ending Enter (keyCode 229) picks nothing", async () => {
+	await renderField();
+	await field().fill('jak');
+	await expectHighlighted('Asia/Jakarta');
+	const init = { key: 'Enter', keyCode: 229, isComposing: false, bubbles: true, cancelable: true };
+	const event = new KeyboardEvent('keydown', init);
+	inputElement().dispatchEvent(event);
+	expect(event.keyCode).toBe(229);
+	expect(event.defaultPrevented).toBe(false);
+	await expect.element(listbox()).toBeVisible();
+	await expect.element(field()).toHaveValue('jak');
+	expect(status().element().textContent).toBe('');
+});
+
 test('a value set from outside while editing does not overwrite the typed text', async () => {
 	const { rerender } = await renderField();
 	await field().fill('jak');
