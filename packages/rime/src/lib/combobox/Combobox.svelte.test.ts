@@ -50,7 +50,7 @@ test('clicking an option picks it, restores the label and resets query', async (
 	await expect.element(page.getByRole('status')).toHaveTextContent('Asia/Jakarta');
 	expect(onchange).toHaveBeenCalledExactlyOnceWith('Asia/Jakarta');
 	await expect.element(field()).toHaveValue('Asia/Jakarta');
-	await expect.element(query()).toHaveTextContent('');
+	await expect.poll(() => query().element().textContent).toBe('');
 	await expect.element(page.getByRole('listbox')).not.toBeInTheDocument();
 	await expect.element(field()).toHaveFocus();
 });
