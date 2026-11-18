@@ -1,5 +1,5 @@
 <script lang="ts" generics="T extends SelectOption">
-	import { onDestroy, untrack } from 'svelte';
+	import { flushSync, onDestroy, untrack } from 'svelte';
 	import { createAttachmentKey } from 'svelte/attachments';
 	import { Popover } from '../internal/popover.svelte.js';
 	import { watchFormReset } from '../internal/form-reset.js';
@@ -50,6 +50,7 @@
 	});
 
 	let highlightOnShow: (() => void) | null = null;
+	let hiddenInput = $state<HTMLInputElement>();
 	let listboxLabel = $state<string>();
 
 	function optionId(index: number): string {
@@ -73,7 +74,16 @@
 		popover.close('commit');
 		if (entry.value === value) return;
 		value = entry.value;
+		announceToForm();
 		onchange?.(entry.value);
+	}
+
+	// A native <select> fires these on a user pick, and form-level listeners (SvelteKit remote
+	// form fields, dirty tracking) depend on them. The flush puts the new value in the input first.
+	function announceToForm(): void {
+		flushSync();
+		hiddenInput?.dispatchEvent(new Event('input', { bubbles: true }));
+		hiddenInput?.dispatchEvent(new Event('change', { bubbles: true }));
 	}
 
 	function selectHighlighted(): void {
@@ -281,7 +291,7 @@
 {/if}
 
 {#if name && !disabled}
-	<input type="hidden" {name} value={value ?? ''} />
+	<input bind:this={hiddenInput} type="hidden" {name} value={value ?? ''} />
 {/if}
 
 {#if popover.mounted}

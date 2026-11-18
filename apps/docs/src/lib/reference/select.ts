@@ -24,7 +24,7 @@ export const select: ComponentReference<SelectProps> = {
 		},
 		name: {
 			type: 'string',
-			notes: 'Renders a hidden input carrying the value, empty when null.'
+			notes: 'Renders a hidden input carrying the value, empty when null. Picking a new option fires bubbling input and change events from it, like a native select.'
 		},
 		placeholder: { type: 'string', notes: 'Trigger text while the value is null.' },
 		placement: {
