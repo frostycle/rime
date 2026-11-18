@@ -18,6 +18,16 @@ test('the live select is labelled and binds its value', async ({ page }) => {
 	await expect(demo.getByRole('status')).toHaveText("value = 'th'");
 });
 
+test('the live combobox filters as you type and binds its value', async ({ page }) => {
+	await page.goto('/combobox');
+	const demo = page.locator('section[aria-labelledby="demo"]');
+	const input = demo.getByRole('combobox', { name: 'Timezone' });
+	await input.click();
+	await input.fill('jakar');
+	await page.getByRole('option', { name: 'Asia/Jakarta' }).click();
+	await expect(demo.getByRole('status')).toHaveText("value = 'Asia/Jakarta'");
+});
+
 test('a deep link lands on its section', async ({ page }) => {
 	await page.goto('/select#keyboard');
 	await expect(page).toHaveURL(/#keyboard$/);
@@ -26,7 +36,8 @@ test('a deep link lands on its section', async ({ page }) => {
 
 for (const [route, files] of [
 	['/dropdown-menu', ['menu-classes.ts', 'AppMenu.svelte']],
-	['/select', ['select-classes.ts', 'AppSelect.svelte']]
+	['/select', ['select-classes.ts', 'AppSelect.svelte']],
+	['/combobox', ['combobox-classes.ts', 'AppCombobox.svelte']]
 ] as const) {
 	for (const file of files) {
 		test(`${route} recipe shows ${file} exactly as the demo runs it`, async ({ page }) => {
@@ -40,7 +51,8 @@ for (const [route, files] of [
 
 const sectionIds = {
 	'/dropdown-menu': ['demo', 'usage', 'props', 'snippets', 'keyboard', 'attributes', 'recipe', 'behaviour'],
-	'/select': ['demo', 'usage', 'labelling', 'props', 'snippets', 'keyboard', 'attributes', 'forms', 'recipe', 'behaviour']
+	'/select': ['demo', 'usage', 'labelling', 'props', 'snippets', 'keyboard', 'attributes', 'forms', 'recipe', 'behaviour'],
+	'/combobox': ['demo', 'usage', 'filtering', 'labelling', 'props', 'snippets', 'keyboard', 'attributes', 'forms', 'recipe', 'behaviour']
 };
 
 for (const [route, ids] of Object.entries(sectionIds)) {

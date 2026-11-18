@@ -91,10 +91,29 @@ A button that opens a list of options and sets one value, defined as data.
 <Select id="country" {items} bind:value={country} name="country" placeholder="Choose a country" />
 ```
 
+## Combobox
+
+A text input that narrows a list as the user types and sets one value. You filter `items` yourself from the bound `query`.
+
+```svelte
+<script>
+	import { Combobox } from '@frostycle/rime/combobox';
+
+	let timezone = $state(null);
+	let query = $state('');
+
+	const visible = $derived(timezones.filter((zone) => contains(zone.label, query)));
+</script>
+
+<label for="timezone">Timezone</label>
+<Combobox id="timezone" items={visible} bind:value={timezone} bind:query name="timezone" placeholder="Search timezones" />
+```
+
 ## Documentation
 
 Props, snippets, keyboard support, state attributes and Tailwind recipes are on [https://rime.frostycle.com](https://rime.frostycle.com).
 
+- [Combobox](https://rime.frostycle.com/combobox)
 - [Date pickers](https://rime.frostycle.com/date-pickers)
 - [Dropdown menu](https://rime.frostycle.com/dropdown-menu)
 - [Select](https://rime.frostycle.com/select)
