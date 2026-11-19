@@ -6,7 +6,8 @@ import {
 	lastEnabled,
 	matchTypeahead,
 	moveEnabled,
-	stepEnabled
+	stepEnabled,
+	withoutEmptyGroups
 } from './list-items.js';
 import type { ListEntry, ListItem } from './list-items.js';
 
@@ -89,4 +90,23 @@ test('moveEnabled moves a page of enabled items, clamping at the ends', () => {
 
 test('moveEnabled returns -1 when nothing is enabled', () => {
 	expect(moveEnabled([{ label: 'A', disabled: true }], -1, 1)).toBe(-1);
+});
+
+test('withoutEmptyGroups drops empty groups and the separators they leave stranded', () => {
+	const separator = { type: 'separator' } as const;
+	const empty = (label: string) => ({ type: 'group', label, items: [] }) as const;
+	const kept = { type: 'group', label: 'Kept', items: [items[0]] } as const;
+	const entries: ListEntry<ListItem>[] = [
+		separator,
+		empty('A'),
+		separator,
+		items[2],
+		separator,
+		empty('B'),
+		separator,
+		kept,
+		separator,
+		empty('C')
+	];
+	expect(withoutEmptyGroups(entries)).toEqual([items[2], separator, kept]);
 });

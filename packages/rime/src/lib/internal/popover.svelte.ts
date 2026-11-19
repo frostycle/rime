@@ -2,7 +2,14 @@ import { autoUpdate, computePosition, flip, shift, type Placement } from '@float
 import { createAttachmentKey } from 'svelte/attachments';
 import { interactionProps, isComposing } from './interaction.js';
 
-export type CloseReason = 'commit' | 'escape' | 'outside' | 'focus-left';
+export type CloseReason =
+	| 'commit'
+	| 'escape'
+	| 'outside'
+	| 'focus-left'
+	| 'toggle'
+	| 'cancel'
+	| 'programmatic';
 
 export type PopoverOptions = {
 	animated?: () => boolean;
@@ -201,7 +208,7 @@ export class Popover {
 	#onTriggerClick = () => {
 		const wasOpen = this.#openAtPointerDown ?? this.open;
 		this.#openAtPointerDown = null;
-		if (wasOpen) this.close('outside');
+		if (wasOpen) this.close('toggle');
 		else this.show();
 	};
 

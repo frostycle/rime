@@ -68,7 +68,7 @@
 			case SPACE:
 				event.preventDefault();
 				if (event.repeat) return;
-				if (popover.open) popover.close('outside');
+				if (popover.open) popover.close('toggle');
 				else openWithKeyboard('first');
 				return;
 			case 'ArrowDown':
@@ -102,7 +102,7 @@
 	});
 
 	$effect(() => {
-		if (disabled) untrack(() => popover.close('outside'));
+		if (disabled) untrack(() => popover.close('programmatic'));
 	});
 
 	onDestroy(() => menu.resetTypeahead());

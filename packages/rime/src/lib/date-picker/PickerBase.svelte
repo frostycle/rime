@@ -106,7 +106,7 @@
 	});
 
 	$effect(() => {
-		if (disabled) untrack(() => popover.close('outside'));
+		if (disabled) untrack(() => popover.close('programmatic'));
 	});
 
 	const valueAtMount = untrack(() => value);
