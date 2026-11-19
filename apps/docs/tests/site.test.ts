@@ -17,6 +17,9 @@ for (const route of ROUTES) {
 			await expect(page.locator('h1')).toHaveCount(1);
 			for (const role of ['banner', 'main', 'contentinfo'] as const) await expect(page.getByRole(role)).toBeVisible();
 			await expect(page.getByRole('link', { name: 'Skip to content' })).toBeAttached();
+			// Headless WebKit's iPhone profile can report <body>'s style without the theme until a frame is
+			// painted (seen with a native <select> on the page); a screenshot forces that paint.
+			await page.screenshot();
 			const { violations } = await runAxe(page);
 			expect(violations).toEqual([]);
 		});
@@ -65,7 +68,7 @@ test('with storage blocked, the theme follows the system and the toggle still wo
 test('the sidebar marks the current page', async ({ page }) => {
 	await page.goto('/select');
 	await expect(
-		page.getByRole('navigation', { name: 'Documentation' }).getByRole('link', { name: 'Select' })
+		page.getByRole('navigation', { name: 'Documentation' }).getByRole('link', { name: 'Select', exact: true })
 	).toHaveAttribute('aria-current', 'page');
 });
 

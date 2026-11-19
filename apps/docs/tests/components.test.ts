@@ -18,6 +18,13 @@ test('the live select is labelled and binds its value', async ({ page }) => {
 	await expect(demo.getByRole('status')).toHaveText("value = 'th'");
 });
 
+test('the live native select is labelled and binds its value', async ({ page }) => {
+	await page.goto('/native-select');
+	const demo = page.locator('section[aria-labelledby="demo"]');
+	await demo.getByRole('combobox', { name: 'Country' }).selectOption('th');
+	await expect(demo.getByRole('status')).toHaveText("value = 'th'");
+});
+
 test('the live combobox filters as you type and binds its value', async ({ page }) => {
 	await page.goto('/combobox');
 	const demo = page.locator('section[aria-labelledby="demo"]');
@@ -52,6 +59,7 @@ for (const [route, files] of [
 const sectionIds = {
 	'/dropdown-menu': ['demo', 'usage', 'props', 'snippets', 'keyboard', 'attributes', 'recipe', 'behaviour'],
 	'/select': ['demo', 'usage', 'labelling', 'props', 'snippets', 'keyboard', 'attributes', 'forms', 'recipe', 'behaviour'],
+	'/native-select': ['demo', 'usage', 'touch', 'props', 'attributes', 'forms', 'behaviour'],
 	'/combobox': ['demo', 'usage', 'filtering', 'labelling', 'props', 'snippets', 'keyboard', 'attributes', 'forms', 'recipe', 'behaviour']
 };
 

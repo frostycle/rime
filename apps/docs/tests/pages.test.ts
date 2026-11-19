@@ -6,7 +6,7 @@ test('home leads with the tagline and a working picker, and links every componen
 	await expect(page.getByRole('heading', { level: 1 })).toHaveText('Headless, snippet-based UI primitives for Svelte 5.');
 	await page.locator('main').getByRole('button', { name: /Nov 3/ }).click();
 	await expect(page.getByRole('dialog', { name: 'Choose dates' })).toBeVisible();
-	for (const name of ['Date picker', 'Dropdown menu', 'Select', 'Combobox']) {
+	for (const name of ['Date picker', 'Dropdown menu', 'Select', 'Native select', 'Combobox']) {
 		await expect(page.locator('main').getByRole('link', { name: new RegExp(name) }).first()).toBeVisible();
 	}
 });

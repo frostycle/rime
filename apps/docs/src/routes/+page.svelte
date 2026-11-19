@@ -10,6 +10,7 @@
 		{ href: '/date-pickers', name: 'Date range picker', blurb: 'Two clicks, a live preview, length limits and a multi-month view.' },
 		{ href: '/dropdown-menu', name: 'Dropdown menu', blurb: 'Actions, links and groups, with arrow keys and type-to-jump.' },
 		{ href: '/select', name: 'Select', blurb: 'One value from a list, labelled like a native field, with form support.' },
+		{ href: '/native-select', name: 'Native select', blurb: "Select's data in a real <select>, for the system picker on touch devices." },
 		{ href: '/combobox', name: 'Combobox', blurb: 'Type to narrow a list, then pick one value. You filter, locally or on a server.' }
 	];
 
