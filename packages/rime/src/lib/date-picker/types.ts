@@ -70,6 +70,7 @@ export type CommonPickerProps<V> = {
 	weekStartsOn?: number;
 	labels?: Partial<CalendarLabels>;
 	disabled?: boolean;
+	required?: boolean;
 	transition?: boolean;
 	classes?: PickerClasses;
 	trigger?: Snippet<[TriggerSnippetArgs<V>]>;

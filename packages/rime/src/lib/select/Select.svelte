@@ -207,6 +207,7 @@
 		disabled,
 		'aria-activedescendant':
 			popover.open && listbox.highlighted !== -1 ? optionId(id, listbox.highlighted) : undefined,
+		'aria-required': required ? 'true' : undefined,
 		...validation.triggerProps,
 		'data-disabled': disabled ? '' : undefined,
 		'data-placeholder': value === null ? '' : undefined,

@@ -30,10 +30,11 @@ export class ConstraintValidation {
 		return this.#failed && required() && !disabled() && empty();
 	}
 
+	// No aria-required: ARIA does not allow it on a plain button trigger, so callers whose trigger
+	// role permits it add it themselves.
 	get triggerProps(): Record<string, unknown> {
 		const invalid = this.invalid;
 		return {
-			'aria-required': this.#options.required() ? 'true' : undefined,
 			'aria-invalid': invalid ? 'true' : undefined,
 			'data-invalid': invalid ? '' : undefined
 		};

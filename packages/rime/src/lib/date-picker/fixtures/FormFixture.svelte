@@ -7,20 +7,29 @@
 		kind,
 		value = null,
 		disabled = false,
+		required = false,
 		onsubmit
 	}: {
 		kind: 'single' | 'range';
 		value?: string | DateRange | null;
 		disabled?: boolean;
+		required?: boolean;
 		onsubmit?: (event: SubmitEvent) => void;
 	} = $props();
 </script>
 
 <form {onsubmit}>
 	{#if kind === 'single'}
-		<DatePicker value={value as string | null} name="due" {disabled} />
+		<DatePicker value={value as string | null} name="due" {disabled} {required} />
 	{:else}
-		<DateRangePicker value={value as DateRange | null} startName="from" endName="to" {disabled} />
+		<DateRangePicker
+			value={value as DateRange | null}
+			startName="from"
+			endName="to"
+			{disabled}
+			{required}
+		/>
 	{/if}
 	<button type="submit">Submit</button>
+	<button type="reset">Reset</button>
 </form>
