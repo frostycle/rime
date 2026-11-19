@@ -21,9 +21,13 @@ export class ConstraintValidation {
 			'aria-hidden': 'true',
 			style: CONTROL_STYLE,
 			onfocus: this.#onControlFocus,
-			oninvalid: () => (this.#failed = true)
+			oninvalid: this.recordFailure
 		};
 	}
+
+	recordFailure = (): void => {
+		this.#failed = true;
+	};
 
 	get invalid(): boolean {
 		const { required, disabled, empty } = this.#options;

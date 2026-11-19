@@ -1,3 +1,4 @@
+import axe from 'axe-core';
 import { expect, test, vi } from 'vitest';
 import { page, userEvent } from 'vitest/browser';
 import { render } from 'vitest-browser-svelte';
@@ -132,4 +133,118 @@ test('id names the select for its label, and one is generated without it', async
 	unmount();
 	await render(NativeSelect, { items });
 	expect(select().id).not.toBe('');
+});
+
+test('required blocks submit while value is null', async () => {
+	await render(FormNativeSelectFixture, { required: true });
+	expect(form().checkValidity()).toBe(false);
+});
+
+test('required passes once an option is picked', async () => {
+	await render(FormNativeSelectFixture, { required: true });
+	await userEvent.selectOptions(field(), 'jp');
+	expect(form().checkValidity()).toBe(true);
+});
+
+test('an empty-string value reports a missing value', async () => {
+	await render(FormNativeSelectFixture, { required: true, value: '' });
+	expect(form().checkValidity()).toBe(false);
+});
+
+test('the invalid state appears only after validation fails', async () => {
+	await render(FormNativeSelectFixture, { required: true });
+	await expect.element(field()).not.toHaveAttribute('data-invalid');
+	await expect.element(field()).not.toHaveAttribute('aria-invalid');
+	form().checkValidity();
+	await expect.element(field()).toHaveAttribute('data-invalid');
+	await expect.element(field()).toHaveAttribute('aria-invalid', 'true');
+});
+
+test('picking a value clears the invalid state', async () => {
+	await render(FormNativeSelectFixture, { required: true });
+	form().checkValidity();
+	await userEvent.selectOptions(field(), 'jp');
+	await expect.element(field()).not.toHaveAttribute('data-invalid');
+	await expect.element(field()).not.toHaveAttribute('aria-invalid');
+});
+
+test('form reset clears the invalid state', async () => {
+	await render(FormNativeSelectFixture, { required: true });
+	form().checkValidity();
+	await expect.element(field()).toHaveAttribute('data-invalid');
+	await page.getByRole('button', { name: 'Reset' }).click();
+	await expect.element(field()).not.toHaveAttribute('data-invalid');
+	await expect.element(field()).not.toHaveAttribute('aria-invalid');
+});
+
+test('turning required off clears the invalid state', async () => {
+	const { rerender } = await render(FormNativeSelectFixture, { required: true });
+	form().checkValidity();
+	await expect.element(field()).toHaveAttribute('data-invalid');
+	await rerender({ required: false });
+	await expect.element(field()).not.toHaveAttribute('data-invalid');
+});
+
+test('the select has no aria-required', async () => {
+	await render(FormNativeSelectFixture, { required: true });
+	await expect.element(field()).not.toHaveAttribute('aria-required');
+});
+
+test('form reset restores the mount value in the element and the bound value', async () => {
+	const { unmount } = await render(FormNativeSelectFixture, { value: 'id' });
+	await userEvent.selectOptions(field(), 'jp');
+	await page.getByRole('button', { name: 'Reset' }).click();
+	await expect.poll(() => select().value).toBe('id');
+	await expect.element(page.getByRole('status')).toHaveTextContent('id');
+	expect(formData()).toEqual({ country: 'id' });
+	unmount();
+
+	const second = await render(FormNativeSelectFixture);
+	await userEvent.selectOptions(field(), 'jp');
+	await page.getByRole('button', { name: 'Reset' }).click();
+	await expect.poll(() => select().selectedIndex).toBe(0);
+	expect(formData()).toEqual({ country: '' });
+	second.unmount();
+
+	await render(FormNativeSelectFixture, { value: 'zz' });
+	await userEvent.selectOptions(field(), 'jp');
+	await page.getByRole('button', { name: 'Reset' }).click();
+	await expect.poll(() => select().value).toBe('zz');
+	expect(formData()).toEqual({ country: 'zz' });
+});
+
+test('form reset fires nothing from the hidden input and does not call onchange', async () => {
+	const log: string[] = [];
+	const onchange = vi.fn();
+	await render(FormNativeSelectFixture, { value: 'id', onchange });
+	await userEvent.selectOptions(field(), 'jp');
+	onchange.mockClear();
+	recordHiddenInputEvents(log);
+	await page.getByRole('button', { name: 'Reset' }).click();
+	await expect.poll(() => select().value).toBe('id');
+	expect(log).toEqual([]);
+	expect(onchange).not.toHaveBeenCalled();
+});
+
+test('state attributes', async () => {
+	const { rerender } = await render(FormNativeSelectFixture);
+	await field().hover();
+	await expect.element(field()).toHaveAttribute('data-hover');
+	select().dispatchEvent(new PointerEvent('pointerdown', { bubbles: true }));
+	expect(select().hasAttribute('data-active')).toBe(true);
+	select().dispatchEvent(new PointerEvent('pointerup', { bubbles: true }));
+	expect(select().hasAttribute('data-active')).toBe(false);
+	await userEvent.tab();
+	await expect.element(field()).toHaveAttribute('data-focus');
+	await rerender({ disabled: true });
+	await expect.element(field()).toHaveAttribute('data-disabled');
+});
+
+test('axe finds no violations, with and without a value', async () => {
+	for (const value of [null, 'jp']) {
+		const { unmount } = await render(FormNativeSelectFixture, { value });
+		const { violations } = await axe.run(document.body, { rules: { region: { enabled: false } } });
+		expect(violations).toEqual([]);
+		unmount();
+	}
 });

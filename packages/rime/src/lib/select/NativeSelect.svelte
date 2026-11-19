@@ -1,5 +1,8 @@
 <script lang="ts" generics="T extends SelectOption">
+	import { untrack } from 'svelte';
+	import { ConstraintValidation } from '../internal/constraint-validation.svelte.js';
 	import { announceChange } from '../internal/form-change.js';
+	import { watchFormReset } from '../internal/form-reset.js';
 	import { interactionProps } from '../internal/interaction.js';
 	import { flattenItems, isGroup, isSeparator, withoutEmptyGroups } from '../internal/list-items.js';
 	import type { NativeSelectProps, SelectOption } from './types.js';
@@ -26,6 +29,36 @@
 	);
 
 	let hiddenInput = $state<HTMLInputElement>();
+	let selectElement = $state<HTMLSelectElement>();
+
+	const validation = new ConstraintValidation({
+		trigger: () => selectElement ?? null,
+		required: () => required,
+		disabled: () => disabled,
+		empty: () => value === null || value === ''
+	});
+
+	const valueAtMount = untrack(() => value);
+
+	// The browser resets a select after the reset event, to the option marked as selected in its
+	// markup (defaultSelected), so setting the element from a reset handler would be overwritten.
+	$effect(() => {
+		void shownItems;
+		void missingValue;
+		if (!selectElement) return;
+		const restored = valueAtMount ?? '';
+		const options = [...selectElement.options];
+		const target = options.find((option) => option.value === restored);
+		for (const option of options) option.defaultSelected = option === target;
+	});
+
+	$effect(() => {
+		if (!selectElement) return;
+		return watchFormReset(selectElement, () => {
+			validation.reset();
+			value = valueAtMount;
+		});
+	});
 
 	function pick(next: string): void {
 		if (next === value) return;
@@ -40,12 +73,15 @@
 {/snippet}
 
 <select
+	bind:this={selectElement}
 	{id}
 	{disabled}
 	{required}
 	value={value ?? ''}
 	class={classes.select}
 	data-disabled={disabled ? '' : undefined}
+	{...validation.triggerProps}
+	oninvalid={validation.recordFailure}
 	onchange={(event) => pick(event.currentTarget.value)}
 	{...interactionProps}
 >
