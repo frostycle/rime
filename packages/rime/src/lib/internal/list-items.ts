@@ -22,6 +22,10 @@ export function flattenItems<T extends ListItem>(entries: ListEntry<T>[]): T[] {
 	});
 }
 
+export function withoutEmptyGroups<T extends ListItem>(entries: ListEntry<T>[]): ListEntry<T>[] {
+	return entries.filter((entry) => !isGroup(entry) || entry.items.length > 0);
+}
+
 export function entryOffsets<T extends ListItem>(entries: ListEntry<T>[]): number[] {
 	let next = 0;
 	return entries.map((entry) => {

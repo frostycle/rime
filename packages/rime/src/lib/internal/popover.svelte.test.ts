@@ -1,6 +1,7 @@
 import { beforeEach, expect, test, vi, type Mock } from 'vitest';
 import { page, userEvent } from 'vitest/browser';
 import { render } from 'vitest-browser-svelte';
+import PopoverAnchorFixture from './PopoverAnchorFixture.svelte';
 import PopoverFixture from './PopoverFixture.svelte';
 import type { CloseReason, Popover, PopoverOptions } from './popover.svelte.js';
 
@@ -124,4 +125,30 @@ test('placement positions the popup', async () => {
 			return top > 0 && Math.round(bottom) === Math.round(triggerTop);
 		})
 		.toBe(true);
+});
+
+test('anchorProps carries state but no button behaviour', async () => {
+	let anchored!: Popover;
+	await render(PopoverAnchorFixture, { expose: (instance: Popover) => (anchored = instance) });
+	const anchor = page.getByTestId('anchor');
+	await expect.element(anchor).toHaveAttribute('aria-expanded', 'false');
+	await anchor.click();
+	await expect.element(content).not.toBeInTheDocument();
+	anchored.show();
+	await expect.element(anchor).toHaveAttribute('aria-expanded', 'true');
+	await expect.element(anchor).toHaveAttribute('data-open');
+	await expect.element(anchor).not.toHaveAttribute('type');
+	await anchor.click();
+	await expect.element(content).toBeVisible();
+});
+
+test('a pointerdown on a registered part does not close', async () => {
+	let anchored!: Popover;
+	await render(PopoverAnchorFixture, { expose: (instance: Popover) => (anchored = instance) });
+	anchored.show();
+	await expect.element(content).toBeVisible();
+	await page.getByTestId('part').click();
+	await expect.element(content).toBeVisible();
+	await outside.click();
+	await expect.element(content).not.toBeInTheDocument();
 });

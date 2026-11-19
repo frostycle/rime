@@ -1,13 +1,23 @@
 import type { Placement } from '@floating-ui/dom';
 import type { Snippet } from 'svelte';
+import type {
+	ListElementProps,
+	ListEntry,
+	ListGroup,
+	ListGroupLabelSnippetArgs,
+	ListOption,
+	ListOptionSnippetArgs,
+	ListSeparator,
+	ListSeparatorSnippetArgs
+} from '../internal/list-types.js';
 
-export type SelectOption = { value: string; label: string; disabled?: boolean };
+export type SelectOption = ListOption;
 
-export type SelectSeparator = { type: 'separator' };
+export type SelectSeparator = ListSeparator;
 
-export type SelectGroup<T extends SelectOption = SelectOption> = { type: 'group'; label: string; items: T[] };
+export type SelectGroup<T extends SelectOption = SelectOption> = ListGroup<T>;
 
-export type SelectEntry<T extends SelectOption = SelectOption> = T | SelectSeparator | SelectGroup<T>;
+export type SelectEntry<T extends SelectOption = SelectOption> = ListEntry<T>;
 
 export type SelectClasses = {
 	trigger?: string;
@@ -18,8 +28,7 @@ export type SelectClasses = {
 	groupLabel?: string;
 };
 
-// `any` because these are spread onto whichever element the consumer chooses, and `unknown` fails Svelte's attribute checks.
-export type SelectElementProps = Record<string | symbol, any>;
+export type SelectElementProps = ListElementProps;
 
 export type SelectTriggerSnippetArgs<T extends SelectOption = SelectOption> = {
 	props: SelectElementProps;
@@ -29,17 +38,11 @@ export type SelectTriggerSnippetArgs<T extends SelectOption = SelectOption> = {
 
 export type SelectPopupSnippetArgs = { props: SelectElementProps; content: Snippet };
 
-export type SelectOptionSnippetArgs<T extends SelectOption = SelectOption> = {
-	option: T;
-	props: SelectElementProps;
-	selected: boolean;
-	highlighted: boolean;
-	disabled: boolean;
-};
+export type SelectOptionSnippetArgs<T extends SelectOption = SelectOption> = ListOptionSnippetArgs<T>;
 
-export type SelectSeparatorSnippetArgs = { props: SelectElementProps };
+export type SelectSeparatorSnippetArgs = ListSeparatorSnippetArgs;
 
-export type SelectGroupLabelSnippetArgs = { label: string; props: SelectElementProps };
+export type SelectGroupLabelSnippetArgs = ListGroupLabelSnippetArgs;
 
 export type SelectProps<T extends SelectOption = SelectOption> = {
 	items: SelectEntry<T>[];
