@@ -62,3 +62,17 @@ export type SelectProps<T extends SelectOption = SelectOption> = {
 	separator?: Snippet<[SelectSeparatorSnippetArgs]>;
 	groupLabel?: Snippet<[SelectGroupLabelSnippetArgs]>;
 };
+
+export type NativeSelectClasses = { select?: string };
+
+export type NativeSelectProps<T extends SelectOption = SelectOption> = {
+	items: SelectEntry<T>[];
+	value?: string | null;
+	onchange?: (value: string | null) => void;
+	id?: string;
+	name?: string;
+	placeholder?: string;
+	disabled?: boolean;
+	required?: boolean;
+	classes?: NativeSelectClasses;
+};
