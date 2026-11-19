@@ -1,4 +1,4 @@
-import { expect, test } from 'vitest';
+import { expect, onTestFinished, test } from 'vitest';
 import { page } from 'vitest/browser';
 import { render } from 'vitest-browser-svelte';
 import DateRangePicker from './DateRangePicker.svelte';
@@ -86,10 +86,19 @@ test('form reset fires no form events', async () => {
 test('a range with only startName fires from that input', async () => {
 	const log: string[] = [];
 	const form = document.body.appendChild(document.createElement('form'));
+	onTestFinished(() => form.remove());
 	await render(DateRangePicker, { target: form, props: { value: october, startName: 'from' } });
 	recordFormEvents(log);
 	await page.getByRole('button', { name: /Oct 1/ }).click();
 	await day('October 5, 2026').click();
 	await day('October 9, 2026').click();
 	expect(log).toEqual(['input:from', 'change:from']);
+});
+
+test('clear on a disabled picker fires nothing', async () => {
+	const { log, onchange } = eventLog();
+	await render(ClearableFixture, { value: '2026-10-15', disabled: true, onchange });
+	recordFormEvents(log);
+	await page.getByRole('button', { name: 'Clear' }).click();
+	expect(log).toEqual([]);
 });
