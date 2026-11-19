@@ -28,6 +28,7 @@ test('clicking the trigger opens, and clicking it again closes without reopening
 	await expect.element(content).toBeVisible();
 	await trigger.click();
 	await expect.element(content).not.toBeInTheDocument();
+	expect(onClose).toHaveBeenCalledExactlyOnceWith('toggle');
 });
 
 test('the trigger exposes its popup state', async () => {
@@ -46,6 +47,20 @@ test('Escape closes and returns focus to the trigger', async () => {
 	await userEvent.keyboard('{Escape}');
 	expect(onClose).toHaveBeenCalledExactlyOnceWith('escape');
 	await expect.element(trigger).toHaveFocus();
+});
+
+test.each([
+	['isComposing', { isComposing: true }],
+	['keyCode 229', { keyCode: 229 }]
+])('Escape during IME composition (%s) leaves the popup open', async (_, init) => {
+	await renderFixture();
+	await trigger.click();
+	await expect.element(content).toBeVisible();
+	const event = new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true, ...init });
+	trigger.element().dispatchEvent(event);
+	expect(event.defaultPrevented).toBe(false);
+	await expect.element(content).toBeVisible();
+	expect(onClose).not.toHaveBeenCalled();
 });
 
 test('commit closes and returns focus to the trigger', async () => {
@@ -132,12 +147,12 @@ test('anchorProps carries state but no button behaviour', async () => {
 	await render(PopoverAnchorFixture, { expose: (instance: Popover) => (anchored = instance) });
 	const anchor = page.getByTestId('anchor');
 	await expect.element(anchor).toHaveAttribute('aria-expanded', 'false');
-	await anchor.click();
-	await expect.element(content).not.toBeInTheDocument();
+	await expect.element(anchor).not.toHaveAttribute('aria-haspopup');
+	await expect.element(anchor).not.toHaveAttribute('type');
 	anchored.show();
+	await expect.element(content).toBeVisible();
 	await expect.element(anchor).toHaveAttribute('aria-expanded', 'true');
 	await expect.element(anchor).toHaveAttribute('data-open');
-	await expect.element(anchor).not.toHaveAttribute('type');
 	await anchor.click();
 	await expect.element(content).toBeVisible();
 });
