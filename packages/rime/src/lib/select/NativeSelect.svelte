@@ -42,14 +42,18 @@
 
 	// The browser resets a select after the reset event, to the option marked as selected in its
 	// markup (defaultSelected), so setting the element from a reset handler would be overwritten.
+	// Marking a fresh option also selects it, so the current selection is put back afterwards.
 	$effect(() => {
+		// Re-run whenever the option elements are re-rendered.
 		void shownItems;
 		void missingValue;
 		if (!selectElement) return;
 		const restored = valueAtMount ?? '';
+		const current = selectElement.selectedIndex;
 		const options = [...selectElement.options];
 		const target = options.find((option) => option.value === restored);
 		for (const option of options) option.defaultSelected = option === target;
+		selectElement.selectedIndex = current;
 	});
 
 	$effect(() => {

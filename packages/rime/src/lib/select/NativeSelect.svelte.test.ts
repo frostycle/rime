@@ -4,6 +4,7 @@ import { page, userEvent } from 'vitest/browser';
 import { render } from 'vitest-browser-svelte';
 import FormNativeSelectFixture from './fixtures/FormNativeSelectFixture.svelte';
 import FormSelectFixture from './fixtures/FormSelectFixture.svelte';
+import LateItemsNativeSelectFixture from './fixtures/LateItemsNativeSelectFixture.svelte';
 import NativeSelect from './NativeSelect.svelte';
 
 const field = () => page.getByRole('combobox', { name: 'Country' });
@@ -247,4 +248,14 @@ test('axe finds no violations, with and without a value', async () => {
 		expect(violations).toEqual([]);
 		unmount();
 	}
+});
+
+test('options added after a pick keep the pick, and reset restores the mount value', async () => {
+	await render(LateItemsNativeSelectFixture);
+	await userEvent.selectOptions(field(), 'id');
+	await page.getByRole('button', { name: 'Add Japan' }).click();
+	await expect.element(page.getByTestId('seen')).toHaveTextContent('id');
+	expect(select().value).toBe('id');
+	await page.getByRole('button', { name: 'Reset' }).click();
+	await expect.poll(() => select().value).toBe('jp');
 });
