@@ -1,7 +1,7 @@
 import type { DatePickerProps, DateRangePickerProps } from '@frostycle/rime/date-picker';
 import type { ComponentReference } from './types.js';
 
-const triggerAttributes = 'data-open, data-disabled, data-hover, data-focus, data-active';
+const triggerAttributes = 'data-open, data-disabled, data-invalid, data-hover, data-focus, data-active';
 
 export const datePickers: ComponentReference<DatePickerProps & DateRangePickerProps> = {
 	props: {
@@ -44,6 +44,13 @@ export const datePickers: ComponentReference<DatePickerProps & DateRangePickerPr
 			appliesTo: 'both'
 		},
 		disabled: { type: 'boolean', notes: 'Renders no hidden inputs.', appliesTo: 'both' },
+		required: {
+			type: 'boolean',
+			default: 'false',
+			notes:
+				"Blocks form submit while no date or range is chosen, with the browser's own message. Adds aria-invalid and data-invalid to the trigger once a validity check fails: a blocked submit, or a checkValidity() or reportValidity() call. A range counts as chosen only once both ends are. The trigger is a button, which cannot carry aria-required, so say in its label that the field is required.",
+			appliesTo: 'both'
+		},
 		transition: {
 			type: 'boolean',
 			default: 'false',

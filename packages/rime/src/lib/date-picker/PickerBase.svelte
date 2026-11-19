@@ -1,6 +1,7 @@
 <script lang="ts" generics="V">
 	import { untrack, type Snippet } from 'svelte';
 	import { createAttachmentKey } from 'svelte/attachments';
+	import { ConstraintValidation } from '../internal/constraint-validation.svelte.js';
 	import { watchFormReset } from '../internal/form-reset.js';
 	import { interactionProps } from '../internal/interaction.js';
 	import { Popover } from '../internal/popover.svelte.js';
@@ -39,6 +40,7 @@
 		weekStartsOn,
 		labels,
 		disabled = false,
+		required = false,
 		transition = false,
 		classes = {},
 		trigger,
@@ -65,6 +67,13 @@
 	let root: HTMLElement | null = null;
 
 	const popover = new Popover(id, () => calendar.reset(), { animated: () => transition });
+
+	const validation = new ConstraintValidation({
+		trigger: () => popover.triggerElement,
+		required: () => required,
+		disabled: () => disabled,
+		empty: () => validatedValue === null
+	});
 
 	const calendar = new Calendar<V>(() => ({
 		...constraints,
@@ -116,6 +125,7 @@
 		if (!element) return;
 		return watchFormReset(element, () => {
 			value = valueAtMount;
+			validation.reset();
 		});
 	});
 
@@ -126,6 +136,7 @@
 
 	const triggerProps = $derived<ElementProps>({
 		...popover.triggerProps,
+		...validation.triggerProps,
 		disabled,
 		'data-disabled': disabled ? '' : undefined
 	});
@@ -281,6 +292,12 @@
 	})}
 {:else}
 	<button {...triggerProps} class={classes.trigger}>{label || resolvedLabels.dialog}</button>
+{/if}
+
+{#if required && !disabled}
+	<!-- Hidden inputs are never validated, so required needs a real control. It has no name: the
+	     hidden inputs below still carry the submitted values. -->
+	<input type="text" required autocomplete="off" value={label} {...validation.controlProps} />
 {/if}
 
 {#if popover.mounted}
