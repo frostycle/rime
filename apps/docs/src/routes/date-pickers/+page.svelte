@@ -37,7 +37,7 @@
 </DateRangePicker>`;
 
 	const singleUsage = `<form method="GET">
-	<DatePicker bind:value={due} name="due" min={today()} />
+	<DatePicker bind:value={due} name="due" min={today()} required />
 </form>`;
 
 	const recipeUsage = '<DateRangeField bind:value={period} months={2} {presets} />';
@@ -75,7 +75,8 @@ const value = isIsoDate(from) ? from : null;`;
 	<div class="mt-4"><CodeBlock code={usage} label="Date range picker usage" /></div>
 	<p class={prose}>
 		<code class={inlineCode}>DatePicker</code> takes a single string. With <code class={inlineCode}>name</code> it
-		renders a hidden input, so it submits with a form.
+		renders a hidden input, so it submits with a form. With <code class={inlineCode}>required</code>, the browser
+		blocks submit while nothing is chosen.
 	</p>
 	<div class="mt-4"><CodeBlock code={singleUsage} label="Date picker usage in a form" /></div>
 </DocSection>
