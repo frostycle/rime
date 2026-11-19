@@ -274,7 +274,8 @@ test('leaving an emptied input clears the value; leaving other text restores the
 });
 
 function addFocusKeepingToolbar() {
-	const toolbar = document.body.appendChild(document.createElement('div'));
+	// Above the field: the open list sits directly below it and would take the click.
+	const toolbar = document.body.insertBefore(document.createElement('div'), document.body.firstChild);
 	toolbar.textContent = 'Toolbar';
 	toolbar.addEventListener('mousedown', (event) => event.preventDefault());
 	onTestFinished(() => toolbar.remove());
