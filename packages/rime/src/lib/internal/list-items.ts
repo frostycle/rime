@@ -23,7 +23,16 @@ export function flattenItems<T extends ListItem>(entries: ListEntry<T>[]): T[] {
 }
 
 export function withoutEmptyGroups<T extends ListItem>(entries: ListEntry<T>[]): ListEntry<T>[] {
-	return entries.filter((entry) => !isGroup(entry) || entry.items.length > 0);
+	const shown: ListEntry<T>[] = [];
+	for (const entry of entries) {
+		if (isGroup(entry) && entry.items.length === 0) continue;
+		const previous = shown.at(-1);
+		if (isSeparator(entry) && (previous === undefined || isSeparator(previous))) continue;
+		shown.push(entry);
+	}
+	const last = shown.at(-1);
+	if (last !== undefined && isSeparator(last)) shown.pop();
+	return shown;
 }
 
 export function entryOffsets<T extends ListItem>(entries: ListEntry<T>[]): number[] {
