@@ -2,6 +2,7 @@
 	import { onDestroy, untrack } from 'svelte';
 	import { createAttachmentKey } from 'svelte/attachments';
 	import { Popover } from '../internal/popover.svelte.js';
+	import { ConstraintValidation } from '../internal/constraint-validation.svelte.js';
 	import { announceChange } from '../internal/form-change.js';
 	import { watchFormReset } from '../internal/form-reset.js';
 	import { flattenItems, isTypeaheadKey } from '../internal/list-items.js';
@@ -47,10 +48,12 @@
 
 	let highlightOnShow: (() => void) | null = null;
 	let formElement = $state<HTMLInputElement | HTMLSelectElement>();
-	let failedValidation = $state(false);
-	const showInvalid = $derived(
-		failedValidation && required && !disabled && (value === null || value === '')
-	);
+	const validation = new ConstraintValidation({
+		trigger: () => popover.triggerElement,
+		required: () => required,
+		disabled: () => disabled,
+		empty: () => value === null || value === ''
+	});
 	let listboxLabel = $state<string>();
 
 	function select(entry: T): void {
@@ -135,27 +138,6 @@
 
 	// A label click would otherwise reach the button and open the list, unlike a native <select>.
 	// Listening on the document covers labels rendered after the trigger.
-	// The browser focuses the first invalid control on a blocked submit and places its message by
-	// that control's box. Covering the trigger only then keeps the control fixed and 1px (no page
-	// scroll) the rest of the time; measuring after placement corrects for an ancestor that a
-	// transform makes the containing block.
-	function onValidatedSelectFocus(event: FocusEvent): void {
-		const trigger = popover.triggerElement;
-		if (!trigger) return;
-		trigger.focus();
-		// WebKit does not scroll a control focused from inside another control's focus handler.
-		trigger.scrollIntoView({ block: 'nearest', inline: 'nearest' });
-		const control = event.currentTarget as HTMLElement;
-		const goal = trigger.getBoundingClientRect();
-		control.style.left = '0px';
-		control.style.top = '0px';
-		const origin = control.getBoundingClientRect();
-		control.style.left = `${goal.left - origin.left}px`;
-		control.style.top = `${goal.top - origin.top}px`;
-		control.style.width = `${goal.width}px`;
-		control.style.height = `${goal.height}px`;
-	}
-
 	function attachLabels(element: HTMLElement) {
 		const onClick = (event: MouseEvent) => {
 			const label = event.target instanceof Element ? event.target.closest('label') : null;
@@ -208,7 +190,7 @@
 		if (!element) return;
 		return watchFormReset(element, () => {
 			value = valueAtMount;
-			failedValidation = false;
+			validation.reset();
 		});
 	});
 
@@ -225,9 +207,7 @@
 		disabled,
 		'aria-activedescendant':
 			popover.open && listbox.highlighted !== -1 ? optionId(id, listbox.highlighted) : undefined,
-		'aria-required': required ? 'true' : undefined,
-		'aria-invalid': showInvalid ? 'true' : undefined,
-		'data-invalid': showInvalid ? '' : undefined,
+		...validation.triggerProps,
 		'data-disabled': disabled ? '' : undefined,
 		'data-placeholder': value === null ? '' : undefined,
 		onkeydown: onTriggerKeydown,
@@ -272,11 +252,7 @@
 			bind:this={formElement}
 			{name}
 			required
-			tabindex="-1"
-			aria-hidden="true"
-			onfocus={onValidatedSelectFocus}
-			oninvalid={() => (failedValidation = true)}
-			style="position: fixed; top: 0; left: 0; opacity: 0; pointer-events: none; width: 1px; height: 1px; margin: 0; border: 0; padding: 0; appearance: none"
+			{...validation.controlProps}
 		>
 			<!-- WebKit does not revalidate when an option's value changes in place, so it is recreated. -->
 			{#key value}
