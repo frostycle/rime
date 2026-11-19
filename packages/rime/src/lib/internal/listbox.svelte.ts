@@ -18,6 +18,7 @@ export function optionId(prefix: string, index: number): string {
 export class Listbox<T extends ListOption> {
 	#items: () => T[];
 	#textInput: boolean;
+	#onPointerHighlight: () => void;
 	#highlightedValue: string | null = null;
 	#typed = '';
 	#typedTimer: ReturnType<typeof setTimeout> | undefined;
@@ -25,9 +26,13 @@ export class Listbox<T extends ListOption> {
 
 	highlighted = $state(-1);
 
-	constructor(items: () => T[], options: { textInput?: boolean } = {}) {
+	constructor(
+		items: () => T[],
+		options: { textInput?: boolean; onPointerHighlight?: () => void } = {}
+	) {
 		this.#items = items;
 		this.#textInput = options.textInput ?? false;
+		this.#onPointerHighlight = options.onPointerHighlight ?? (() => {});
 	}
 
 	highlightOnOpen(value: string | null): void {
@@ -107,6 +112,7 @@ export class Listbox<T extends ListOption> {
 			onpointermove: (event: PointerEvent) => {
 				if (this.#pointer.moved(event) && !disabled && event.pointerType !== 'touch') {
 					this.#highlight(index);
+					this.#onPointerHighlight();
 				}
 			}
 		};

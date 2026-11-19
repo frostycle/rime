@@ -1,7 +1,8 @@
 <script lang="ts" generics="T extends SelectOption">
-	import { flushSync, onDestroy, untrack } from 'svelte';
+	import { onDestroy, untrack } from 'svelte';
 	import { createAttachmentKey } from 'svelte/attachments';
 	import { Popover } from '../internal/popover.svelte.js';
+	import { announceChange } from '../internal/form-change.js';
 	import { watchFormReset } from '../internal/form-reset.js';
 	import { flattenItems, isTypeaheadKey } from '../internal/list-items.js';
 	import ListboxEntries from '../internal/ListboxEntries.svelte';
@@ -57,16 +58,8 @@
 		popover.close('commit');
 		if (entry.value === value) return;
 		value = entry.value;
-		announceToForm();
+		announceChange(formElement);
 		onchange?.(entry.value);
-	}
-
-	// A native <select> fires these on a user pick, and form-level listeners (SvelteKit remote
-	// form fields, dirty tracking) depend on them. The flush puts the new value in the input first.
-	function announceToForm(): void {
-		flushSync();
-		formElement?.dispatchEvent(new Event('input', { bubbles: true }));
-		formElement?.dispatchEvent(new Event('change', { bubbles: true }));
 	}
 
 	function selectHighlighted(): void {
@@ -220,7 +213,7 @@
 	});
 
 	$effect(() => {
-		if (disabled) untrack(() => popover.close('outside'));
+		if (disabled) untrack(() => popover.close('programmatic'));
 	});
 
 	onDestroy(() => listbox.resetTypeahead());
