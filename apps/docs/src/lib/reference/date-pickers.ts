@@ -57,15 +57,15 @@ export const datePickers: ComponentReference<DatePickerProps & DateRangePickerPr
 			notes: 'Keeps the popup mounted through its CSS transition.',
 			appliesTo: 'both'
 		},
-		name: { type: 'string', notes: 'Renders a hidden input.', appliesTo: 'single' },
+		name: { type: 'string', notes: 'Renders a hidden input. A pick or clear that changes an input fires bubbling input then change from it.', appliesTo: 'single' },
 		startName: {
 			type: 'string',
-			notes: 'Renders two hidden inputs with endName, for ?from=…&to=… filter forms.',
+			notes: 'Renders two hidden inputs with endName, for ?from=…&to=… filter forms. A pick or clear that changes an input fires bubbling input then change from it.',
 			appliesTo: 'range'
 		},
 		endName: {
 			type: 'string',
-			notes: 'Renders two hidden inputs with startName, for ?from=…&to=… filter forms.',
+			notes: 'Renders two hidden inputs with startName, for ?from=…&to=… filter forms. A pick or clear that changes an input fires bubbling input then change from it.',
 			appliesTo: 'range'
 		},
 		classes: {

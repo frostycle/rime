@@ -1,7 +1,12 @@
+<script lang="ts" module>
+	export type FormField = { name: string; value: string };
+</script>
+
 <script lang="ts" generics="V">
-	import { untrack, type Snippet } from 'svelte';
+	import { untrack } from 'svelte';
 	import { createAttachmentKey } from 'svelte/attachments';
 	import { ConstraintValidation } from '../internal/constraint-validation.svelte.js';
+	import { announceChange } from '../internal/form-change.js';
 	import { watchFormReset } from '../internal/form-reset.js';
 	import { interactionProps } from '../internal/interaction.js';
 	import { Popover } from '../internal/popover.svelte.js';
@@ -21,7 +26,7 @@
 	type Props = CommonPickerProps<V> & {
 		strategy: SelectionStrategy<V>;
 		formatLabel: (value: V) => string;
-		hiddenInputs?: Snippet<[V | null]>;
+		fields: (value: V | null) => FormField[];
 		minDays?: number;
 		maxDays?: number;
 	};
@@ -51,7 +56,7 @@
 		presetList,
 		strategy,
 		formatLabel,
-		hiddenInputs
+		fields
 	}: Props = $props();
 
 	const id = $props.id();
@@ -87,17 +92,26 @@
 		commit
 	}));
 
+	let fieldElements = $state<HTMLInputElement[]>([]);
+
+	function applyUserValue(next: V | null): void {
+		const before = fields(validatedValue);
+		value = next;
+		fields(next).forEach((field, index) => {
+			if (field.value !== before[index]?.value) announceChange(fieldElements[index]);
+		});
+		onchange?.(next);
+	}
+
 	function commit(next: V): void {
 		if (disabled) return;
-		value = next;
-		onchange?.(next);
+		applyUserValue(next);
 		popover.close('commit');
 	}
 
 	function clear(): void {
 		if (disabled) return;
-		value = null;
-		onchange?.(null);
+		applyUserValue(null);
 	}
 
 	function selectPreset(preset: Preset<V>): void {
@@ -309,5 +323,7 @@
 {/if}
 
 {#if !disabled}
-	{@render hiddenInputs?.(validatedValue)}
+	{#each fields(validatedValue) as field, index}
+		<input bind:this={fieldElements[index]} type="hidden" name={field.name} value={field.value} />
+	{/each}
 {/if}
