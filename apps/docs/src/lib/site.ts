@@ -14,6 +14,7 @@ export const NAV: { heading: string; links: { href: string; label: string }[] }[
 			{ href: '/date-pickers', label: 'Date pickers' },
 			{ href: '/dropdown-menu', label: 'Dropdown menu' },
 			{ href: '/select', label: 'Select' },
+			{ href: '/native-select', label: 'Native select' },
 			{ href: '/combobox', label: 'Combobox' }
 		]
 	}

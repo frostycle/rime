@@ -118,4 +118,8 @@
 		Disabling an open select closes it and disables the trigger, so focus falls to
 		<code class={inlineCode}>&lt;body&gt;</code>. Move focus yourself if you disable a select while it is in use.
 	</p>
+	<p class={prose}>
+		For the operating system's picker on phones and tablets, use <a href="/native-select">Native select</a> with the
+		same items.
+	</p>
 </DocSection>

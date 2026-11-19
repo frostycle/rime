@@ -91,6 +91,19 @@ A button that opens a list of options and sets one value, defined as data.
 <Select id="country" {items} bind:value={country} name="country" placeholder="Choose a country" />
 ```
 
+## NativeSelect
+
+A real `<select>` that takes the same `items` as `Select` and submits the same form data. On touch devices it opens the operating system's picker; choose between the two with a media query in your app.
+
+```svelte
+<script>
+	import { NativeSelect } from '@frostycle/rime/select';
+</script>
+
+<label for="country">Country</label>
+<NativeSelect id="country" {items} bind:value={country} name="country" placeholder="Choose a country" />
+```
+
 ## Combobox
 
 A text input that narrows a list as the user types and sets one value. You filter `items` yourself from the bound `query`.
@@ -116,6 +129,7 @@ Props, snippets, keyboard support, state attributes and Tailwind recipes are on 
 - [Combobox](https://rime.frostycle.com/combobox)
 - [Date pickers](https://rime.frostycle.com/date-pickers)
 - [Dropdown menu](https://rime.frostycle.com/dropdown-menu)
+- [Native select](https://rime.frostycle.com/native-select)
 - [Select](https://rime.frostycle.com/select)
 - [Styling](https://rime.frostycle.com/styling)
 
