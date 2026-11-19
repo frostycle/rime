@@ -273,6 +273,49 @@ test('leaving an emptied input clears the value; leaving other text restores the
 	expect(onchange).toHaveBeenCalledOnce();
 });
 
+function addFocusKeepingToolbar() {
+	const toolbar = document.body.appendChild(document.createElement('div'));
+	toolbar.textContent = 'Toolbar';
+	toolbar.addEventListener('mousedown', (event) => event.preventDefault());
+	onTestFinished(() => toolbar.remove());
+	return page.elementLocator(toolbar);
+}
+
+test('clicking outside on content that keeps focus restores the label for good', async () => {
+	const { rerender } = await renderField({ value: 'Europe/Paris' });
+	const toolbar = addFocusKeepingToolbar();
+	await field().fill('jak');
+	await expect.element(listbox()).toBeVisible();
+	await toolbar.click();
+	await expect.element(listbox()).not.toBeInTheDocument();
+	await expect.element(field()).toHaveFocus();
+	await expect.element(field()).toHaveValue('Europe/Paris');
+	await expect.poll(() => query().element().textContent).toBe('');
+	await rerender({ all: [bangkok, ...all] });
+	await expect.element(listbox()).not.toBeInTheDocument();
+});
+
+test('clicking outside on content that keeps focus clears an emptied input', async () => {
+	const onchange = vi.fn();
+	await renderField({ value: 'Europe/Paris', onchange });
+	const toolbar = addFocusKeepingToolbar();
+	await emptyTheInput();
+	await toolbar.click();
+	await expect.poll(() => status().element().textContent).toBe('');
+	expect(onchange).toHaveBeenCalledExactlyOnceWith(null);
+	await expect.element(field()).toHaveFocus();
+});
+
+test('picking the option that is already selected does not call onchange', async () => {
+	const onchange = vi.fn();
+	await renderField({ value: 'Asia/Jakarta', onchange });
+	await field().fill('jak');
+	await option('Asia/Jakarta').click();
+	await expect.element(listbox()).not.toBeInTheDocument();
+	await expect.element(field()).toHaveValue('Asia/Jakarta');
+	expect(onchange).not.toHaveBeenCalled();
+});
+
 test('Home and End move the text cursor, not the highlight', async () => {
 	await renderField();
 	await field().click();
@@ -341,6 +384,7 @@ test('the empty snippet shows as a status in a popup that is not a listbox', asy
 	await field().fill('zzz');
 	await expect.element(emptyPopup().getByRole('status')).toHaveTextContent(emptyMessage('zzz'));
 	await expect.element(listbox()).not.toBeInTheDocument();
+	await expect.element(emptyPopup()).not.toHaveAttribute('aria-label');
 	await expect.element(option('Asia/Jakarta')).not.toBeInTheDocument();
 	await expect.element(field()).not.toHaveAttribute('aria-activedescendant');
 	await expect.element(field()).toHaveAttribute('aria-controls', emptyPopup().element().id);
@@ -396,6 +440,42 @@ test('the toggle button reopens a list closed while editing, still filtered', as
 	await expect.element(option('Asia/Jakarta')).toBeVisible();
 	await expect.element(option('Europe/Paris')).not.toBeInTheDocument();
 	await expectHighlighted('Asia/Jakarta');
+});
+
+test('results arriving late do not reopen a list closed with the button, until the user types', async () => {
+	const { rerender } = await renderAllSnippets();
+	await field().fill('asia');
+	await page.getByRole('button', { includeHidden: true }).click();
+	await expect.element(listbox()).not.toBeInTheDocument();
+	await rerender({ all: [bangkok, ...all] });
+	await expect.element(listbox()).not.toBeInTheDocument();
+	await expect.element(field()).toHaveValue('asia');
+	await userEvent.keyboard('{Backspace}');
+	await expect.element(option('Asia/Bangkok')).toBeVisible();
+});
+
+test('the button carries disabled and interaction state', async () => {
+	const { rerender } = await renderAllSnippets();
+	const button = page.getByRole('button', { includeHidden: true });
+	await button.hover();
+	await expect.element(button).toHaveAttribute('data-hover');
+	const element = button.element();
+	element.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true }));
+	expect(element.hasAttribute('data-active')).toBe(true);
+	element.dispatchEvent(new PointerEvent('pointerup', { bubbles: true }));
+	expect(element.hasAttribute('data-active')).toBe(false);
+	await rerender({ disabled: true });
+	await expect.element(button).toBeDisabled();
+	await expect.element(button).toHaveAttribute('data-disabled');
+});
+
+test('Down with no items and an empty snippet opens the empty message', async () => {
+	await renderAllSnippets({ all: [] });
+	await field().click();
+	await userEvent.keyboard('{ArrowDown}');
+	await expect.element(emptyPopup().getByRole('status')).toHaveTextContent(emptyMessage(''));
+	await expect.element(field()).toHaveAttribute('aria-expanded', 'true');
+	await expect.element(field()).not.toHaveAttribute('aria-activedescendant');
 });
 
 test('custom input and option snippets receive working props', async () => {

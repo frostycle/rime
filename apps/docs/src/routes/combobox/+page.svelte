@@ -167,16 +167,19 @@ const contains = (label, query) => plain(label).includes(plain(query));`;
 <DocSection id="behaviour" title="Behaviour to plan for">
 	<p class={prose}>
 		While the user is not editing, the input shows the selected label. Typing replaces it with the typed text and
-		sets <code class={inlineCode}>query</code>; a pick, Escape, leaving the field or a form reset set
-		<code class={inlineCode}>query</code> back to <code class={inlineCode}>''</code>. The component never rewrites the
-		input while the user types, and an emptied input highlights nothing until Down or Up.
+		sets <code class={inlineCode}>query</code>; a pick, Escape, leaving the field, clicking outside the list or a form
+		reset set <code class={inlineCode}>query</code> back to <code class={inlineCode}>''</code>. Leaving or clicking
+		outside with the input emptied clears the value. The component never rewrites the input while the user types, and
+		an emptied input highlights nothing until Down or Up.
 	</p>
 	<p class={prose}>
 		When <code class={inlineCode}>items</code> has no options, the <code class={inlineCode}>empty</code> snippet is
 		shown in the open list. Without it the list closes, and reopens when options return while the user is still
-		typing. When <code class={inlineCode}>items</code> change without a <code class={inlineCode}>query</code> change,
+		typing. Closing the list with the toggle button keeps the typed text, and results arriving later do not reopen it
+		until the user types again or presses Down or Up. When <code class={inlineCode}>items</code> change without a <code class={inlineCode}>query</code> change,
 		such as late server results, the highlight stays on an option the user moved to; otherwise it goes to the first
-		enabled option.
+		enabled option. Separators left at either end of the list, or next to each other, by groups your filter emptied
+		are not rendered.
 	</p>
 	<p class={prose}>
 		Disabling an open combobox closes it and disables the input, so focus falls to

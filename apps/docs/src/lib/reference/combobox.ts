@@ -59,7 +59,7 @@ export const combobox: ComponentReference<ComboboxProps> = {
 		button: {
 			args: 'props, open',
 			notes:
-				'A toggle button rendered after the input. There is none without this snippet. It has tabindex="-1" and aria-hidden="true", and pressing it keeps focus in the input.'
+				'A toggle button rendered after the input. There is none without this snippet. It has tabindex="-1" and aria-hidden="true", and pressing it keeps focus in the input. Closing the list with it keeps the typed text.'
 		},
 		popup: { args: 'props, content', notes: 'Render content for the default body.' },
 		option: { args: 'option, props, selected, highlighted, disabled' },

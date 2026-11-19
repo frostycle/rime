@@ -1,5 +1,6 @@
 <script lang="ts" generics="T extends ComboboxOption">
 	import { flushSync, untrack } from 'svelte';
+	import { announceChange } from '../internal/form-change.js';
 	import { watchFormReset } from '../internal/form-reset.js';
 	import { interactionProps, isComposing } from '../internal/interaction.js';
 	import { flattenItems, withoutEmptyGroups } from '../internal/list-items.js';
@@ -41,7 +42,10 @@
 		selected?.label ?? (value === null ? undefined : knownLabels.get(value)) ?? ''
 	);
 
-	const listbox = new Listbox<T>(() => flatItems, { textInput: true });
+	const listbox = new Listbox<T>(() => flatItems, {
+		textInput: true,
+		onPointerHighlight: () => (movedByUser = true)
+	});
 
 	const popover = new Popover(id, onClose, {
 		role: 'listbox',
@@ -50,16 +54,20 @@
 	});
 
 	let editing = $state(false);
+	let dismissed = false;
 	let movedByUser = false;
 	let listboxLabel = $state<string>();
 	let formElement = $state<HTMLInputElement>();
 
 	const inputText = $derived(editing ? query : selectedLabel);
-	const hasContent = $derived(flatItems.length > 0 || empty !== undefined);
+	const isListbox = $derived(flatItems.length > 0);
+	const hasContent = $derived(isListbox || empty !== undefined);
 
 	function onClose(reason: CloseReason): void {
 		listbox.resetTypeahead();
 		if (reason === 'escape') endEditing();
+		// Fires on pointerdown, before any blur, so the clear for an emptied input happens here.
+		if (reason === 'outside') finishEditing();
 	}
 
 	function endEditing(): void {
@@ -67,21 +75,18 @@
 		query = '';
 	}
 
+	function finishEditing(): void {
+		if (editing && query === '') commit(null);
+		else endEditing();
+	}
+
 	function commit(next: string | null): void {
 		endEditing();
 		popover.close('commit');
 		if (next === value) return;
 		value = next;
-		announceToForm();
+		announceChange(formElement);
 		onchange?.(next);
-	}
-
-	// A native <select> fires these on a user pick, and form-level listeners depend on them.
-	// The flush puts the new value in the hidden input first.
-	function announceToForm(): void {
-		flushSync();
-		formElement?.dispatchEvent(new Event('input', { bubbles: true }));
-		formElement?.dispatchEvent(new Event('change', { bubbles: true }));
 	}
 
 	function select(entry: T): void {
@@ -90,7 +95,7 @@
 
 	function revert(): void {
 		endEditing();
-		popover.close('escape');
+		popover.close('cancel');
 	}
 
 	function highlightForQuery(): void {
@@ -100,11 +105,12 @@
 
 	function showWhileEditing(): void {
 		if (hasContent) popover.show();
-		else popover.close('outside');
+		else popover.close('programmatic');
 	}
 
 	function onInput(event: Event): void {
 		editing = true;
+		dismissed = false;
 		query = (event.currentTarget as HTMLInputElement).value;
 		movedByUser = false;
 		showWhileEditing();
@@ -113,6 +119,7 @@
 
 	function openFromKeyboard(): void {
 		if (!hasContent) return;
+		dismissed = false;
 		if (editing) highlightForQuery();
 		else listbox.highlightOnOpen(value);
 		popover.show();
@@ -160,22 +167,17 @@
 		const next = event.relatedTarget;
 		if (next instanceof Node && document.getElementById(id)?.contains(next)) return;
 		popover.close('focus-left');
-		if (editing && query === '') commit(null);
-		else endEditing();
+		finishEditing();
 	}
 
 	function toggleFromButton(): void {
 		if (popover.open) {
-			popover.close('outside');
+			dismissed = editing;
+			popover.close('toggle');
 			return;
 		}
 		popover.triggerElement?.focus();
 		openFromKeyboard();
-	}
-
-	function onPopupPointerMove(event: PointerEvent): void {
-		const hovered = (event.target as Element).closest('[role="option"]');
-		if (hovered && hovered.id === optionId(id, listbox.highlighted)) movedByUser = true;
 	}
 
 	function labelText(element: HTMLElement | null): string | undefined {
@@ -194,7 +196,7 @@
 	$effect(() => {
 		for (const entry of flatItems) void entry.disabled;
 		untrack(() => {
-			if (editing) showWhileEditing();
+			if (editing && !dismissed) showWhileEditing();
 			if (!popover.open) return;
 			if (movedByUser || !editing) listbox.syncHighlight();
 			else highlightForQuery();
@@ -219,13 +221,13 @@
 		return watchFormReset(element, () => {
 			endEditing();
 			value = valueAtMount;
-			popover.close('outside');
+			popover.close('programmatic');
 			flushSync();
 		});
 	});
 
 	$effect(() => {
-		if (disabled) untrack(() => popover.close('outside'));
+		if (disabled) untrack(() => popover.close('programmatic'));
 	});
 
 	const inputProps = $derived<ComboboxElementProps>({
@@ -263,11 +265,10 @@
 
 	const popupProps = $derived<ComboboxElementProps>({
 		...popover.contentProps,
-		role: flatItems.length > 0 ? 'listbox' : undefined,
-		'aria-label': listboxLabel,
+		role: isListbox ? 'listbox' : undefined,
+		'aria-label': isListbox ? listboxLabel : undefined,
 		class: classes.popup,
-		onmousedown: (event: MouseEvent) => event.preventDefault(),
-		onpointermove: onPopupPointerMove
+		onmousedown: (event: MouseEvent) => event.preventDefault()
 	});
 </script>
 
